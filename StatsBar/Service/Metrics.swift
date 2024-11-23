@@ -15,5 +15,9 @@ struct Metrics {
         let socInfo = try SOCInfo()
 
         print("\(socInfo)")
+
+        let ior = try IOReport()
+
+        print("\(ior)")
     }
 }

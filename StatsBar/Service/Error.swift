@@ -16,6 +16,10 @@ enum ServiceError: Error {
     case noCpuCores
     case failedToReadPipe
     case failedDeserialization
+    case unableToCheckChannels
+    case noIOChannels
+    case errorOwningChannels
+    case failedToGetChannelSubscription
 
     func getMessage() -> String {
         switch self {
@@ -35,6 +39,14 @@ enum ServiceError: Error {
             return "Failed to read process pipe"
         case .failedDeserialization:
             return "Failed to deserialize pipe"
+        case .noIOChannels:
+            return "No channels found for IOReport"
+        case .unableToCheckChannels:
+            return "Failed to access list of channels"
+        case .errorOwningChannels:
+            return "Failed to own IO channels"
+        case .failedToGetChannelSubscription:
+            return "Failed to get channels subscription"
         }
     }
 }

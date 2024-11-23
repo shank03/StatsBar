@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D4EB3AB22CF1C3E200953F83 /* libIOReport.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EB3AAF2CF1BC2300953F83 /* libIOReport.tbd */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D41EC8702CE24DF700452C1F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		D41EC85C2CE24DF600452C1F /* StatsBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StatsBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D41EC86F2CE24DF700452C1F /* StatsBarTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StatsBarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D41EC8792CE24DF700452C1F /* StatsBarUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StatsBarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4EB3AAF2CF1BC2300953F83 /* libIOReport.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libIOReport.tbd; path = usr/lib/libIOReport.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -52,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D4EB3AB22CF1C3E200953F83 /* libIOReport.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +84,7 @@
 				D41EC85E2CE24DF600452C1F /* StatsBar */,
 				D41EC8722CE24DF700452C1F /* StatsBarTests */,
 				D41EC87C2CE24DF700452C1F /* StatsBarUITests */,
+				D4EB3AAE2CF1BC2300953F83 /* Frameworks */,
 				D41EC85D2CE24DF600452C1F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +97,14 @@
 				D41EC8792CE24DF700452C1F /* StatsBarUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D4EB3AAE2CF1BC2300953F83 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D4EB3AAF2CF1BC2300953F83 /* libIOReport.tbd */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -328,6 +343,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/$(PROJECT_NAME)/$(SWIFT_MODULE_NAME)-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -384,6 +400,7 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/$(PROJECT_NAME)/$(SWIFT_MODULE_NAME)-Bridging-Header.h";
 			};
 			name = Release;
 		};
@@ -411,6 +428,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.shank03.StatsBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/$(PROJECT_NAME)/$(SWIFT_MODULE_NAME)-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -439,6 +457,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.shank03.StatsBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/$(PROJECT_NAME)/$(SWIFT_MODULE_NAME)-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
