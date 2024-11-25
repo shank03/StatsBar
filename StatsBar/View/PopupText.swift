@@ -14,31 +14,38 @@ struct PopupText: View {
     var body: some View {
         HStack {
             if let metric = self.metrics {
-                HStack(spacing: 3) {
-                    Image(systemName: "cpu")
-                        .font(.system(size: 15))
+                HStack(spacing: 8) {
+                    //                    Image(systemName: "cpu")
+                    //                        .font(.system(size: 15))
                     VStack {
-                        Text(String(format: "%.1f%% / %.2f GHz", arguments: metric.getECPUInfo()))
-                            .font(.footnote)
-                        Text(String(format: "%.1f%% / %.2f GHz", arguments: metric.getPCPUInfo()))
-                            .font(.footnote)
+                        Text("CPU").font(.system(size: 8))
+                        //                        Text(String(format: "%.2f / %.2f GHz", arguments: metric.getCPUFreqs()))
+                        //                            .font(.footnote)
+                        Text(String(format: "%.1f%%", arguments: [metric.getCPUUsage()]))
+                            .font(.callout)
                     }
 
-                    Text(" | ")
-
-                    Image(systemName: "cpu.fill")
-                        .font(.system(size: 15))
+                    //                    Image(systemName: "cpu.fill")
+                    //                        .font(.system(size: 15))
                     VStack {
+                        Text("GPU").font(.system(size: 8))
                         Text(String(format: "%.1f%%", arguments: [metric.getGPUUsage()]))
-                            .font(.footnote)
-                        Text(String(format: "%.2f GHz", arguments: [metric.getGPUFreq()]))
-                            .font(.footnote)
+                            .font(.callout)
+                        //                        Text(String(format: "%.2f GHz", arguments: [metric.getGPUFreq()]))
+                        //                            .font(.footnote)
                     }
 
-//                    Text(" | ")
-//
-//                    Image(systemName: "memorychip")
-//                        .font(.system(size: 15))
+                    //                    Text(" | ")
+                    //                    Image(systemName: "memorychip")
+                    //                        .font(.system(size: 10))
+
+                    VStack {
+                        Text("MEM").font(.system(size: 8))
+                        Text(String(format: "%.1f GB", arguments: [metric.getMemUsed()]))
+                            .font(.callout)
+                        //                        Text(String(format: "%.2f GHz", arguments: [metric.getGPUFreq()]))
+                        //                            .font(.footnote)
+                    }
                 }
             } else {
                 Text("StatsBar")

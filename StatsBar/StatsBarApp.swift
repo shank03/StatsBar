@@ -12,9 +12,6 @@ struct StatsBarApp: App {
 
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
-    //    @AppStorage("showMenuBarExtra") private var showMenuBarExtra = true
-    //    @Environment(\.dismissWindow) private var dismissWindow
-
     var body: some Scene {
         Settings {}
     }
@@ -34,16 +31,18 @@ class AppDelegate: NSObject, ObservableObject, NSApplicationDelegate {
     }
 
     func setupMenu() {
-        popOver.animates = true
-        popOver.behavior = .transient
+        let contentView = NSHostingView(rootView: MenuView(delegate: self))
+        contentView.frame = NSRect(x: 0, y: 0, width: 320, height: 640)
 
-        popOver.contentViewController = NSViewController()
-        popOver.contentViewController?.view = NSHostingView(rootView: MenuView(delegate: self))
-        popOver.contentViewController?.view.window?.makeKey()
+        let menuItem = NSMenuItem()
+        menuItem.view = contentView
+
+        let menu = NSMenu()
+        menu.addItem(menuItem)
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem?.menu = menu
         if let menuButton = statusItem?.button {
-            menuButton.action = #selector(menuButtonAction(sender:))
             menuButton.target = self
 
             let iconView = NSHostingView(rootView: PopupText())
@@ -51,16 +50,6 @@ class AppDelegate: NSObject, ObservableObject, NSApplicationDelegate {
 
             menuButton.addSubview(iconView)
             menuButton.frame = iconView.frame
-        }
-    }
-
-    @objc func menuButtonAction(sender: AnyObject) {
-        if popOver.isShown {
-            popOver.performClose(sender)
-        } else {
-            if let menuButton = statusItem?.button {
-                popOver.show(relativeTo: menuButton.bounds, of: menuButton, preferredEdge: .minY)
-            }
         }
     }
 }

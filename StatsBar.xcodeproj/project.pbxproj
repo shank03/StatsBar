@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D455C1342CF502860086065B /* BitCollections in Frameworks */ = {isa = PBXBuildFile; productRef = D455C1332CF502860086065B /* BitCollections */; };
+		D455C1362CF502860086065B /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = D455C1352CF502860086065B /* Collections */; };
+		D455C1382CF502860086065B /* DequeModule in Frameworks */ = {isa = PBXBuildFile; productRef = D455C1372CF502860086065B /* DequeModule */; };
+		D455C13A2CF502860086065B /* HashTreeCollections in Frameworks */ = {isa = PBXBuildFile; productRef = D455C1392CF502860086065B /* HashTreeCollections */; };
+		D455C13C2CF502860086065B /* HeapModule in Frameworks */ = {isa = PBXBuildFile; productRef = D455C13B2CF502860086065B /* HeapModule */; };
+		D455C13E2CF502860086065B /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = D455C13D2CF502860086065B /* OrderedCollections */; };
 		D4EB3AB22CF1C3E200953F83 /* libIOReport.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EB3AAF2CF1BC2300953F83 /* libIOReport.tbd */; };
 /* End PBXBuildFile section */
 
@@ -57,6 +63,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D455C13A2CF502860086065B /* HashTreeCollections in Frameworks */,
+				D455C1362CF502860086065B /* Collections in Frameworks */,
+				D455C1382CF502860086065B /* DequeModule in Frameworks */,
+				D455C1342CF502860086065B /* BitCollections in Frameworks */,
+				D455C13C2CF502860086065B /* HeapModule in Frameworks */,
+				D455C13E2CF502860086065B /* OrderedCollections in Frameworks */,
 				D4EB3AB22CF1C3E200953F83 /* libIOReport.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -127,6 +139,12 @@
 			);
 			name = StatsBar;
 			packageProductDependencies = (
+				D455C1332CF502860086065B /* BitCollections */,
+				D455C1352CF502860086065B /* Collections */,
+				D455C1372CF502860086065B /* DequeModule */,
+				D455C1392CF502860086065B /* HashTreeCollections */,
+				D455C13B2CF502860086065B /* HeapModule */,
+				D455C13D2CF502860086065B /* OrderedCollections */,
 			);
 			productName = StatsBar;
 			productReference = D41EC85C2CE24DF600452C1F /* StatsBar.app */;
@@ -210,6 +228,9 @@
 			);
 			mainGroup = D41EC8532CE24DF600452C1F;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D455C1322CF502860086065B /* XCRemoteSwiftPackageReference "swift-collections" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D41EC85D2CE24DF600452C1F /* Products */;
 			projectDirPath = "";
@@ -572,6 +593,50 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D455C1322CF502860086065B /* XCRemoteSwiftPackageReference "swift-collections" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-collections.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D455C1332CF502860086065B /* BitCollections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D455C1322CF502860086065B /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = BitCollections;
+		};
+		D455C1352CF502860086065B /* Collections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D455C1322CF502860086065B /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = Collections;
+		};
+		D455C1372CF502860086065B /* DequeModule */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D455C1322CF502860086065B /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = DequeModule;
+		};
+		D455C1392CF502860086065B /* HashTreeCollections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D455C1322CF502860086065B /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = HashTreeCollections;
+		};
+		D455C13B2CF502860086065B /* HeapModule */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D455C1322CF502860086065B /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = HeapModule;
+		};
+		D455C13D2CF502860086065B /* OrderedCollections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D455C1322CF502860086065B /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = OrderedCollections;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D41EC8542CE24DF600452C1F /* Project object */;
 }
