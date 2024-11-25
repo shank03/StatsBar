@@ -29,4 +29,20 @@ struct Metrics {
         self.allPower = self.cpuPower + self.gpuPower + self.anePower
         self.sysPower = sysPower
     }
+
+    func getECPUInfo() -> [Double] {
+        return [Double(self.eCpuUsage.1 * 100), Double(self.eCpuUsage.0) / 1000.0]
+    }
+
+    func getPCPUInfo() -> [Double] {
+        return [Double(self.pCpuUsage.1 * 100), Double(self.pCpuUsage.0) / 1000.0]
+    }
+
+    func getGPUFreq() -> Double {
+        return Double(self.gpuUsage.0) / 1000.0
+    }
+
+    func getGPUUsage() -> Double {
+        return Double(self.gpuUsage.1) * 100
+    }
 }

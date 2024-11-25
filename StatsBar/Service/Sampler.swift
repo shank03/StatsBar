@@ -12,16 +12,15 @@ private let GPU_FREQ_SUBG = "GPU Performance States"
 
 struct Sampler {
 
-    let socInfo: SOCInfo
-    let ior: IOReport
+    private let socInfo: SOCInfo
+    private let ior: IOReport
 
     init() throws {
         self.socInfo = try SOCInfo()
         self.ior = try IOReport()
     }
 
-    func getMetrics() async throws -> Metrics {
-        let duration = 500
+    func getMetrics(duration: Int) async throws -> Metrics {
         let measures = 4
 
         let sampleData = try await self.ior.getSamples(duration: duration, count: measures)
