@@ -20,6 +20,7 @@ enum ServiceError: Error {
     case noIOChannels
     case errorOwningChannels
     case failedToGetChannelSubscription
+    case unexpectedError(msg: String)
 
     func getMessage() -> String {
         switch self {
@@ -47,6 +48,8 @@ enum ServiceError: Error {
             return "Failed to own IO channels"
         case .failedToGetChannelSubscription:
             return "Failed to get channels subscription"
+        case .unexpectedError(let msg):
+            return "Something went wrong: \(msg)"
         }
     }
 }

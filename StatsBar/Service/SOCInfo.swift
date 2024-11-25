@@ -36,7 +36,7 @@ struct SOCInfo {
             print("Error: failed to get properties")
         }
 
-        guard let props = props?.takeRetainedValue() as? [String: Any] else {
+        guard let props = props?.takeUnretainedValue() as? [String: Any] else {
             print("Props is empty")
             throw ServiceError.dictionaryNull(for: "Power manager")
         }

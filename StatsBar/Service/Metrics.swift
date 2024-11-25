@@ -10,14 +10,23 @@ import CoreFoundation
 import IOKit
 
 struct Metrics {
+    let eCpuUsage: (UInt32, Float32)
+    let pCpuUsage: (UInt32, Float32)
+    let gpuUsage: (UInt32, Float32)
+    let cpuPower: Float32
+    let gpuPower: Float32
+    let anePower: Float32
+    let allPower: Float32
+    let sysPower: Float32
 
-    func test() throws {
-        let socInfo = try SOCInfo()
-
-        print("\(socInfo)")
-
-        let ior = try IOReport()
-
-        print("\(ior)")
+    init(eCpuUsage: (UInt32, Float32), pCpuUsage: (UInt32, Float32), gpuUsage: (UInt32, Float32), cpuPower: Float32, gpuPower: Float32, anePower: Float32, sysPower: Float32) {
+        self.eCpuUsage = eCpuUsage
+        self.pCpuUsage = pCpuUsage
+        self.gpuUsage = gpuUsage
+        self.cpuPower = cpuPower
+        self.gpuPower = gpuPower
+        self.anePower = anePower
+        self.allPower = self.cpuPower + self.gpuPower + self.anePower
+        self.sysPower = sysPower
     }
 }

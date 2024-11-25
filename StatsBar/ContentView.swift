@@ -27,20 +27,34 @@ struct ContentView: View {
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
             .toolbar {
                 ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                    HStack {
+                        Button(action: addItem) {
+                            Label("Add Item", systemImage: "plus")
+                        }
+
+                        Button(action: {
+                            DispatchQueue.global(qos: .background).async {
+                                Task {
+                                    do {
+                                        let sampler = try Sampler()
+                                        while true {
+                                            try await Task.sleep(nanoseconds: 500 * NSEC_PER_MSEC)
+                                            let metrics = try await sampler.getMetrics()
+                                            print(metrics)
+                                        }
+                                    } catch {
+                                        print(error)
+                                    }
+                                }
+                            }
+                        }) {
+                            Label("Sample", systemImage: "play")
+                        }
                     }
                 }
             }
         } detail: {
             Text("Select an item")
-        }
-        .onAppear {
-            do {
-                try Metrics().test()
-            } catch {
-                print(error)
-            }
         }
     }
 
