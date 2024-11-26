@@ -29,54 +29,66 @@ struct MenuView: View {
 
     var body: some View {
         VStack {
-            Button(action: {
-                if isRunning {
-                    isRunning = false
-                    return
-                }
+            HStack {
+                Button(action: {
+                    if isRunning {
+                        isRunning = false
+                        return
+                    }
 
-                isRunning = true
-                DispatchQueue.global(qos: .background).async {
-                    Task {
-                        do {
-                            let sampler = try Sampler()
-                            DispatchQueue.main.async {
-                                self.sampler = sampler
-                            }
-
-                            while await isRunning {
-                                try await Task.sleep(nanoseconds: 500 * NSEC_PER_MSEC)
-                                let metrics = try await sampler.getMetrics(duration: 500)
+                    isRunning = true
+                    DispatchQueue.global(qos: .background).async {
+                        Task {
+                            do {
+                                let sampler = try Sampler()
                                 DispatchQueue.main.async {
-                                    self.metrics = metrics
+                                    self.sampler = sampler
+                                }
 
-                                    self.usageGraph.append(UsagePoint(eCPUUsage: metrics.getECPUInfo()[0], pCPUUsage: metrics.getPCPUInfo()[0], gpuUsage: metrics.getGPUUsage(), memUsage: metrics.getMemUsage(), swapUsage: metrics.getSwapUsage()))
-                                    if self.usageGraph.count > 32 {
-                                        let _ = self.usageGraph.popFirst()
-                                    }
+                                while await isRunning {
+                                    try await Task.sleep(nanoseconds: 500 * NSEC_PER_MSEC)
+                                    let metrics = try await sampler.getMetrics(duration: 500)
+                                    DispatchQueue.main.async {
+                                        self.metrics = metrics
 
-                                    if let menuButton = self.delegate.statusItem?.button {
-                                        let iconView = NSHostingView(rootView: PopupText(metrics: self.metrics))
-                                        iconView.frame = NSRect(x: 0, y: 0, width: 132, height: 22)
+                                        self.usageGraph.append(UsagePoint(eCPUUsage: metrics.getECPUInfo()[0], pCPUUsage: metrics.getPCPUInfo()[0], gpuUsage: metrics.getGPUUsage(), memUsage: metrics.getMemUsage(), swapUsage: metrics.getSwapUsage()))
+                                        while self.usageGraph.count > 32 {
+                                            let _ = self.usageGraph.popFirst()
+                                        }
 
-                                        menuButton.subviews[0] = iconView
-                                        menuButton.frame = iconView.frame
+                                        if let menuButton = self.delegate.statusItem?.button {
+                                            let iconView = NSHostingView(rootView: PopupText(metrics: self.metrics))
+                                            iconView.frame = NSRect(x: 0, y: 0, width: 132, height: 22)
+
+                                            menuButton.subviews[0] = iconView
+                                            menuButton.frame = iconView.frame
+                                        }
                                     }
                                 }
+                            } catch {
+                                print(error)
                             }
-                        } catch {
-                            print(error)
                         }
                     }
+                }) {
+                    Label(self.isRunning ? "Stop" : "Start", systemImage: self.isRunning ? "stop" : "play")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 4)
                 }
-            }) {
-                Label(self.isRunning ? "Stop" : "Start", systemImage: self.isRunning ? "stop" : "play")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 4)
-                    .padding(.horizontal, 8)
+                .clipShape(RoundedRectangle(cornerSize: CGSize(width: 8, height: 8)))
+
+                Spacer()
+
+                Button {
+                    NSApplication.shared.terminate(nil)
+                } label: {
+                    Label("Quit App", systemImage: "power.circle.fill")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 4)
+                }
+                .clipShape(RoundedRectangle(cornerSize: CGSize(width: 8, height: 8)))
             }
-            .buttonStyle(.plain)
-            .clipShape(RoundedRectangle(cornerSize: CGSize(width: 8, height: 8)))
+            .padding(.horizontal, 8)
 
             if let metrics = self.metrics {
                 Divider()
