@@ -57,7 +57,7 @@ struct MenuView: View {
 
                                     if let menuButton = self.delegate.statusItem?.button {
                                         let iconView = NSHostingView(rootView: PopupText(metrics: self.metrics))
-                                        iconView.frame = NSRect(x: 0, y: 0, width: 196, height: 22)
+                                        iconView.frame = NSRect(x: 0, y: 0, width: 132, height: 22)
 
                                         menuButton.subviews[0] = iconView
                                         menuButton.frame = iconView.frame

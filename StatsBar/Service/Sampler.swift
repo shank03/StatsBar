@@ -14,10 +14,12 @@ struct Sampler {
 
     let socInfo: SOCInfo
     private let ior: IOReport
+    private let smc: SMC
 
     init() throws {
         self.socInfo = try SOCInfo()
         self.ior = try IOReport()
+        self.smc = try SMC()
     }
 
     func getMetrics(duration: Int) async throws -> Metrics {
@@ -222,5 +224,11 @@ struct Sampler {
         }
 
         return (xsw.xsu_used, xsw.xsu_total)
+    }
+
+    private func getSysPower() throws -> Float32 {
+        let pstr = try self.smc.readPSTR()
+        let val32 = UInt32(pstr[0]) | UInt32(pstr[1]) << 8 | UInt32(pstr[2]) << 16 | UInt32(pstr[3]) << 24
+        return Float32(val32)
     }
 }

@@ -22,7 +22,7 @@ struct SOCInfo {
     let gpuCores: Int
 
     init() throws {
-        let services = try getServices()
+        let services = try getIOServices(service: SERVICE_NAME)
 
         guard let pmgr = services.first(where: { (name, _) in
             name == "pmgr"
@@ -98,32 +98,6 @@ private func getFreq(dict: [String: Any], key: String) throws -> [UInt32] {
 }
 
 private let SERVICE_NAME = "AppleARMIODevice"
-
-private func getServices() throws -> [(name: String, next: io_object_t)] {
-    var result: [(name: String, next: io_object_t)] = []
-
-    let service = IOServiceMatching("AppleARMIODevice")!
-    var iter = 0 as io_iterator_t;
-    if IOServiceGetMatchingServices(0, service, &iter) != 0 {
-        print("Error: Service not found")
-        throw ServiceError.matchingServiceNotFound
-    }
-
-    while case let next = IOIteratorNext(iter), next != 0 {
-        var buff = [CChar](repeating: 0, count: 128)
-        if IORegistryEntryGetName(next, &buff) != 0 {
-            print("Error reading entry name: \(next)")
-            throw ServiceError.errorReadingIORegistry
-        }
-
-        buff.withUnsafeBufferPointer { ptr in
-            let data = String(cString: ptr.baseAddress!)
-            result.append((name: data, next: next))
-        }
-    }
-
-    return result
-}
 
 struct SPDisplaysDataType: Decodable {
     let name: String
