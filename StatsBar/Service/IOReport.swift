@@ -50,23 +50,23 @@ class IOReport {
         self.prev = nil
     }
 
-    func getSample(duration: UInt64) async throws -> [IOSample] {
-        guard let sampleF = IOReportCreateSamples(self.subscription, self.channels, nil)?.takeUnretainedValue() else {
-            throw ServiceError.unexpectedError(msg: "Sample empty in creation [1]")
-        }
-
-        try await Task.sleep(nanoseconds: UInt64(duration * NSEC_PER_MSEC))
-
-        guard let sampleS = IOReportCreateSamples(self.subscription, self.channels, nil)?.takeUnretainedValue() else {
-            throw ServiceError.unexpectedError(msg: "Sample empty in creation [2]")
-        }
-
-        guard let delta = IOReportCreateSamplesDelta(sampleF, sampleS, nil)?.takeUnretainedValue() else {
-            throw ServiceError.unexpectedError(msg: "Sample delta nil")
-        }
-
-        return collectIOSamples(data: delta)
-    }
+//    func getSample(duration: UInt64) async throws -> [IOSample] {
+//        guard let sampleF = IOReportCreateSamples(self.subscription, self.channels, nil)?.takeRetainedValue() else {
+//            throw ServiceError.unexpectedError(msg: "Sample empty in creation [1]")
+//        }
+//
+//        try await Task.sleep(nanoseconds: UInt64(duration * NSEC_PER_MSEC))
+//
+//        guard let sampleS = IOReportCreateSamples(self.subscription, self.channels, nil)?.takeRetainedValue() else {
+//            throw ServiceError.unexpectedError(msg: "Sample empty in creation [2]")
+//        }
+//
+//        guard let delta = IOReportCreateSamplesDelta(sampleF, sampleS, nil)?.takeRetainedValue() else {
+//            throw ServiceError.unexpectedError(msg: "Sample delta nil")
+//        }
+//
+//        return collectIOSamples(data: delta)
+//    }
 
     func getSamples(duration: Int, count: Int) async throws -> [([IOSample], TimeInterval)] {
         let step = UInt64(duration / count)
@@ -77,7 +77,7 @@ class IOReport {
         for _ in 0..<count {
             try await Task.sleep(nanoseconds: UInt64(step * NSEC_PER_MSEC))
             let next = try self.rawSample()
-            guard let diff = IOReportCreateSamplesDelta(prev.samples, next.samples, nil)?.takeUnretainedValue() else {
+            guard let diff = IOReportCreateSamplesDelta(prev.samples, next.samples, nil)?.takeRetainedValue() else {
                 throw ServiceError.unexpectedError(msg: "Diff null in sample delta")
             }
 
@@ -93,7 +93,7 @@ class IOReport {
     }
 
     private func rawSample() throws -> (samples: CFDictionary, time: TimeInterval) {
-        guard let sample = IOReportCreateSamples(self.subscription, self.channels, nil)?.takeUnretainedValue() else {
+        guard let sample = IOReportCreateSamples(self.subscription, self.channels, nil)?.takeRetainedValue() else {
             throw ServiceError.unexpectedError(msg: "RawSample - no value")
         }
         return (sample, Date().timeIntervalSince1970)
@@ -111,7 +111,7 @@ private func getIOChannels() throws -> CFMutableDictionary {
     var channels = [CFDictionary]()
     for (gname, sname) in channelNames {
         let channel = IOReportCopyChannelsInGroup(gname as CFString?, sname as CFString?, 0, 0, 0)
-        guard let channel = channel?.takeUnretainedValue() else {
+        guard let channel = channel?.takeRetainedValue() else {
             print("Channel empty for name: \(gname): \(sname ?? "")")
             continue
         }

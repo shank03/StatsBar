@@ -40,7 +40,7 @@ struct MenuView: View {
     @State private var isRunning: Bool = false
     @State private var sampler: Sampler?
     @State private var metrics: Metrics?
-    @State var delegate: AppDelegate
+    @State var updateMenu: (Metrics) -> Void
 
     @State private var usageGraph: Deque<UsagePoint> = UsagePoint.mockData()
     @State private var graphShape = RoundedRectangle(cornerRadius: 12)
@@ -83,13 +83,7 @@ struct MenuView: View {
                                             let _ = self.usageGraph.popFirst()
                                         }
 
-                                        if let menuButton = self.delegate.statusItem?.button {
-                                            let iconView = NSHostingView(rootView: PopupText(metrics: self.metrics))
-                                            iconView.frame = NSRect(x: 0, y: 0, width: 132, height: 22)
-
-                                            menuButton.subviews[0] = iconView
-                                            menuButton.frame = iconView.frame
-                                        }
+                                        self.updateMenu(metrics)
                                     }
                                 }
                             } catch {

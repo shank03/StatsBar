@@ -85,13 +85,16 @@ private func getFreq(dict: [String: Any], key: String) throws -> [UInt32] {
     var freqs: [UInt32] = []
     //        var volts: [UInt32] = []
 
-    let chunks = stride(from: 0, to: bytes.count, by: 8).map { Array(bytes[$0..<min($0 + 8, bytes.count)])}
+    var chunks = stride(from: 0, to: bytes.count, by: 8).map { Array(bytes[$0..<min($0 + 8, bytes.count)])}
     for chunk in chunks {
         //            volts.append(UInt32(chunk[4]) | UInt32(chunk[5]) << 8 | UInt32(chunk[6]) << 16 | UInt32(chunk[7]) << 24)
 
         let f = UInt32(chunk[0]) | UInt32(chunk[1]) << 8 | UInt32(chunk[2]) << 16 | UInt32(chunk[3]) << 24
         freqs.append(f / 1000 / 1000)   // MHz
     }
+
+    bytes.removeAll()
+    chunks.removeAll()
 
     //        print("key: \(key): V: \(length) - \(freqs) - \(volts)")
     return freqs

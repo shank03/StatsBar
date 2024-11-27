@@ -31,7 +31,16 @@ class AppDelegate: NSObject, ObservableObject, NSApplicationDelegate {
     }
 
     func setupMenu() {
-        let contentView = NSHostingView(rootView: MenuView(delegate: self))
+        let contentView = NSHostingView(rootView: MenuView(updateMenu: { metrics in
+            if let menuButton = self.statusItem?.button {
+                menuButton.subviews.removeAll()
+                let iconView = NSHostingView(rootView: PopupText(metrics: metrics))
+                iconView.frame = NSRect(x: 0, y: 0, width: 132, height: 22)
+
+                menuButton.addSubview(iconView)
+                menuButton.frame = iconView.frame
+            }
+        }))
         contentView.frame = NSRect(x: 0, y: 0, width: 320, height: 620)
 
         let menuItem = NSMenuItem()
