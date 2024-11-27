@@ -32,7 +32,7 @@ class AppDelegate: NSObject, ObservableObject, NSApplicationDelegate {
 
     func setupMenu() {
         let contentView = NSHostingView(rootView: MenuView(delegate: self))
-        contentView.frame = NSRect(x: 0, y: 0, width: 320, height: 600)
+        contentView.frame = NSRect(x: 0, y: 0, width: 320, height: 620)
 
         let menuItem = NSMenuItem()
         menuItem.view = contentView
