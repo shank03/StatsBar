@@ -295,7 +295,7 @@ struct MenuView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
 
                         Spacer()
-                        Text(String(format: "%.2f W", arguments: [metrics.allPower / 1000.0]))
+                        Text(String(format: "%.2f W", arguments: [metrics.sysPower]))
                     }
 
                     HStack {

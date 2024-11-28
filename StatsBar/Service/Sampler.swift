@@ -100,7 +100,7 @@ struct Sampler {
             cpuPower: results.reduce(0, { $0 + $1.cpuPower }),
             gpuPower: results.reduce(0, { $0 + $1.gpuPower }),
             anePower: results.reduce(0, { $0 + $1.anePower }),
-            sysPower: 0,
+            sysPower: try self.smc.readPSTR(),
             memUsage: try self.getMemUsage(),
             swapUsage: try self.getSwap()
         )
@@ -224,11 +224,5 @@ struct Sampler {
         }
 
         return (xsw.xsu_used, xsw.xsu_total)
-    }
-
-    private func getSysPower() throws -> Float32 {
-        let pstr = try self.smc.readPSTR()
-        let val32 = UInt32(pstr[0]) | UInt32(pstr[1]) << 8 | UInt32(pstr[2]) << 16 | UInt32(pstr[3]) << 24
-        return Float32(val32)
     }
 }
