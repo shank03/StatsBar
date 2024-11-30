@@ -20,8 +20,9 @@ struct Metrics {
     let sysPower: Float32
     let memUsage: (UInt64, UInt64)
     let swapUsage: (UInt64, UInt64)
+    let networkUsage: (upload: Int64, download: Int64)
 
-    init(eCpuUsage: (UInt32, Float32), pCpuUsage: (UInt32, Float32), gpuUsage: (UInt32, Float32), cpuPower: Float32, gpuPower: Float32, anePower: Float32, sysPower: Float32, memUsage: (UInt64, UInt64), swapUsage: (UInt64, UInt64)) {
+    init(eCpuUsage: (UInt32, Float32), pCpuUsage: (UInt32, Float32), gpuUsage: (UInt32, Float32), cpuPower: Float32, gpuPower: Float32, anePower: Float32, sysPower: Float32, memUsage: (UInt64, UInt64), swapUsage: (UInt64, UInt64), networkUsage: (Int64, Int64)) {
         self.eCpuUsage = eCpuUsage
         self.pCpuUsage = pCpuUsage
         self.gpuUsage = gpuUsage
@@ -32,6 +33,7 @@ struct Metrics {
         self.sysPower = sysPower
         self.memUsage = memUsage
         self.swapUsage = swapUsage
+        self.networkUsage = networkUsage
     }
 
     func getCPUFreqs() -> [Double] {
@@ -74,7 +76,8 @@ struct Metrics {
     }
 
     func getSwapUsage() -> Double {
-        return (self.getSwapUsed() * 100) / Double(self.getTotalSwap())
+        let used = self.getSwapUsed()
+        return !used.isNaN && used > 0.0 ? (used * 100) / Double(self.getTotalSwap()) : 0
     }
 
     func getSwapUsed() -> Double {

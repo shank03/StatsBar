@@ -15,11 +15,13 @@ struct Sampler {
     let socInfo: SOCInfo
     private let ior: IOReport
     private let smc: SMC
+    let network: Network
 
     init() throws {
         self.socInfo = try SOCInfo()
         self.ior = try IOReport()
         self.smc = try SMC()
+        self.network = Network()
     }
 
     func getMetrics(duration: Int) async throws -> Metrics {
@@ -79,7 +81,8 @@ struct Sampler {
                 anePower: anePower,
                 sysPower: 0,
                 memUsage: (0, 0),
-                swapUsage: (0, 0)
+                swapUsage: (0, 0),
+                networkUsage: (0, 0)
             )
             results.append(metrics)
         }
@@ -102,7 +105,8 @@ struct Sampler {
             anePower: results.reduce(0, { $0 + $1.anePower }),
             sysPower: try self.smc.readPSTR(),
             memUsage: try self.getMemUsage(),
-            swapUsage: try self.getSwap()
+            swapUsage: try self.getSwap(),
+            networkUsage: try self.network.readStats()
         )
 
         return metrics
