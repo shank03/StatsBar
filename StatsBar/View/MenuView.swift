@@ -76,8 +76,10 @@ struct MenuView: View {
                                 }
 
                                 while await isRunning {
-                                    try await Task.sleep(nanoseconds: 500 * NSEC_PER_MSEC)
-                                    let metrics = try await sampler.getMetrics(duration: 500)
+                                    // interval of 1 sec
+                                    try await Task.sleep(for: .milliseconds(500), tolerance: .zero) // 500 ms
+                                    let metrics = try await sampler.getMetrics()    // 500 ms
+
                                     DispatchQueue.main.async {
                                         self.metrics = metrics
 
@@ -101,6 +103,10 @@ struct MenuView: View {
                                 }
                             } catch {
                                 print(error)
+                            }
+
+                            DispatchQueue.main.async {
+                                self.sampler = nil
                             }
                         }
                     }

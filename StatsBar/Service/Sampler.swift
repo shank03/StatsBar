@@ -24,14 +24,12 @@ struct Sampler {
         self.network = Network()
     }
 
-    func getMetrics(duration: Int) async throws -> Metrics {
+    func getMetrics() async throws -> Metrics {
         let measures = 4
-
-        let sampleData = try await self.ior.getSamples(duration: duration, count: measures)
+        let sampleData = try await self.ior.getSamples(measures: measures)
 
         var results = [Metrics]()
         for (samples, dt) in sampleData {
-
             var eCpuUsages = [(UInt32, Float32)]()
             var pCpuUsages = [(UInt32, Float32)]()
             var gpuUsage: (UInt32, Float32) = (0, 0)
@@ -39,23 +37,23 @@ struct Sampler {
             var gpuPower = Float32(0)
             var anePower = Float32(0)
 
+
             for sample in samples {
                 if sample.group == "CPU Stats" && sample.subGroup == CPU_FREQ_SUBG {
-                    if sample.channel.contains("ECPU") {
+                    if sample.channel.starts(with: "ECPU") {
                         eCpuUsages.append(self.calculateFrequencies(dict: sample.delta, freqs: self.socInfo.eCpuFreqs))
                         continue
                     }
 
-                    if sample.channel.contains("PCPU") {
+                    if sample.channel.starts(with: "PCPU") {
                         pCpuUsages.append(self.calculateFrequencies(dict: sample.delta, freqs: self.socInfo.pCpuFreqs))
                         continue
                     }
                 }
 
-                if sample.group == "GPU Stats" && sample.subGroup == GPU_FREQ_SUBG {
-                    if sample.channel == "GPUPH" {
-                        gpuUsage = self.calculateFrequencies(dict: sample.delta, freqs: Array(self.socInfo.gpuFreqs.dropFirst(1)))
-                    }
+                if sample.group == "GPU Stats" && sample.subGroup == GPU_FREQ_SUBG && sample.channel == "GPUPH" {
+                    gpuUsage = self.calculateFrequencies(dict: sample.delta, freqs: Array(self.socInfo.gpuFreqs.dropFirst(1)))
+                    continue
                 }
 
                 if sample.group == "Energy Model" {

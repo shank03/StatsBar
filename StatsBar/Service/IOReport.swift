@@ -68,14 +68,15 @@ class IOReport {
 //        return collectIOSamples(data: delta)
 //    }
 
-    func getSamples(duration: Int, count: Int) async throws -> [([IOSample], TimeInterval)] {
-        let step = UInt64(duration / count)
+    func getSamples(measures: Int) async throws -> [([IOSample], TimeInterval)] {
+        let duration = 500  // ms
+        let step = UInt64(duration / measures)
         var prev = self.prev == nil ? try self.rawSample() : self.prev!
 
         var samples = [([IOSample], TimeInterval)]()
 
-        for _ in 0..<count {
-            try await Task.sleep(nanoseconds: UInt64(step * NSEC_PER_MSEC))
+        for _ in 0..<measures {
+            try await Task.sleep(for: .milliseconds(step), tolerance: .zero)
             let next = try self.rawSample()
             guard let diff = IOReportCreateSamplesDelta(prev.samples, next.samples, nil)?.takeRetainedValue() else {
                 throw ServiceError.unexpectedError(msg: "Diff null in sample delta")
