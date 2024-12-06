@@ -5,4 +5,5 @@ References
  - [Stats](https://github.com/exelban/stats)
 
 <img src="img/stats.png" width="620" height="620" />
+<img src="img/stats-dark.png" width="620" height="620" />
 

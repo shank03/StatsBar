@@ -16,19 +16,23 @@ struct Sampler {
     private let ior: IOReport
     private let smc: SMC
     let network: Network
+    let disk: Disk
 
     init() throws {
         self.socInfo = try SOCInfo()
         self.ior = try IOReport()
         self.smc = try SMC()
         self.network = Network()
+        self.disk = Disk()
     }
 
     func getMetrics() async throws -> Metrics {
         let measures = 4
-        let sampleData = try await self.ior.getSamples(measures: measures)
+        try self.disk.updateDiskSpaceStats()
 
+        let sampleData = try await self.ior.getSamples(measures: measures)
         var results = [Metrics]()
+
         for (samples, dt) in sampleData {
             var eCpuUsages = [(UInt32, Float32)]()
             var pCpuUsages = [(UInt32, Float32)]()
@@ -36,7 +40,6 @@ struct Sampler {
             var cpuPower = Float32(0)
             var gpuPower = Float32(0)
             var anePower = Float32(0)
-
 
             for sample in samples {
                 if sample.group == "CPU Stats" && sample.subGroup == CPU_FREQ_SUBG {
@@ -80,7 +83,8 @@ struct Sampler {
                 sysPower: 0,
                 memUsage: (0, 0),
                 swapUsage: (0, 0),
-                networkUsage: (0, 0)
+                networkUsage: (0, 0),
+                diskUsage: [:]
             )
             results.append(metrics)
         }
@@ -104,7 +108,8 @@ struct Sampler {
             sysPower: try self.smc.readPSTR(),
             memUsage: try self.getMemUsage(),
             swapUsage: try self.getSwap(),
-            networkUsage: try self.network.readStats()
+            networkUsage: try self.network.readStats(),
+            diskUsage: self.disk.readDriveStats()
         )
 
         return metrics

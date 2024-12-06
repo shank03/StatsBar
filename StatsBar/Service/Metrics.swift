@@ -21,8 +21,9 @@ struct Metrics {
     let memUsage: (UInt64, UInt64)
     let swapUsage: (UInt64, UInt64)
     let networkUsage: (upload: Int64, download: Int64)
+    let diskUsage: [String: (read: Int64, write: Int64)]
 
-    init(eCpuUsage: (UInt32, Float32), pCpuUsage: (UInt32, Float32), gpuUsage: (UInt32, Float32), cpuPower: Float32, gpuPower: Float32, anePower: Float32, sysPower: Float32, memUsage: (UInt64, UInt64), swapUsage: (UInt64, UInt64), networkUsage: (Int64, Int64)) {
+    init(eCpuUsage: (UInt32, Float32), pCpuUsage: (UInt32, Float32), gpuUsage: (UInt32, Float32), cpuPower: Float32, gpuPower: Float32, anePower: Float32, sysPower: Float32, memUsage: (UInt64, UInt64), swapUsage: (UInt64, UInt64), networkUsage: (Int64, Int64), diskUsage: [String: (read: Int64, write: Int64)]) {
         self.eCpuUsage = eCpuUsage
         self.pCpuUsage = pCpuUsage
         self.gpuUsage = gpuUsage
@@ -34,6 +35,7 @@ struct Metrics {
         self.memUsage = memUsage
         self.swapUsage = swapUsage
         self.networkUsage = networkUsage
+        self.diskUsage = diskUsage
     }
 
     func getCPUFreqs() -> [Double] {
@@ -86,5 +88,13 @@ struct Metrics {
 
     func getTotalSwap() -> UInt64 {
         return self.swapUsage.1 / 1024 / 1024 / 1024
+    }
+
+    func getDiskRead(key: String) -> Int64 {
+        return self.diskUsage[key]?.read ?? 0
+    }
+
+    func getDiskWrite(key: String) -> Int64 {
+        return self.diskUsage[key]?.write ?? 0
     }
 }

@@ -14,6 +14,31 @@ enum NetworkUsageType: String, Plottable {
     case download = "download"
 }
 
+enum DiskUsageType: String, Plottable {
+    case read = "read"
+    case write = "write"
+}
+
+struct DiskUsagePoint: Identifiable {
+    let id: UInt64
+    let name: String
+    let usage: [(value: Int64, type: DiskUsageType)]
+
+    init(id: UInt64, name: String, usage: (read: Int64, write: Int64)) {
+        self.id = id
+        self.name = name
+        self.usage = [(usage.read, .read), (usage.write == 0 ? -1 : usage.write * -1, .write)]
+    }
+
+    static func mockData() -> Deque<DiskUsagePoint> {
+        var res: Deque<DiskUsagePoint> = []
+        for _ in 0...32 {
+            res.append(DiskUsagePoint(id: res.last?.id.advanced(by: 1) ?? 1, name: "", usage: (0, 0)))
+        }
+        return res
+    }
+}
+
 struct UsagePoint: Identifiable {
     let id: UInt64
     let eCpuUsage: Double
@@ -48,12 +73,18 @@ struct MenuView: View {
     @State private var sampler: Sampler?
     @State private var metrics: Metrics?
     @State var updateMenu: (Metrics) -> Void
+    @State private var disks: OrderedDictionary<String, Drive> = [:]
 
     @State private var usageGraph: Deque<UsagePoint> = UsagePoint.mockData()
+    @State private var diskUsageGraph: OrderedDictionary<String, Deque<DiskUsagePoint>> = [:]
     @State private var graphShape = RoundedRectangle(cornerRadius: 12)
 
     private func getNetworkGraphDomain() -> [Int64] {
         let maxUsage = self.usageGraph.reduce(Int64(0)) { max($0, max($1.networkUsage[0].value, $1.networkUsage[1].value)) }
+        return [maxUsage * -1, maxUsage]
+    }
+    private func getDiskGraphDomain(disk: String) -> [Int64] {
+        let maxUsage = (self.diskUsageGraph[disk] ?? []).reduce(Int64(0)) { max($0, max($1.usage[0].value, $1.usage[1].value)) }
         return [maxUsage * -1, maxUsage]
     }
 
@@ -82,10 +113,26 @@ struct MenuView: View {
 
                                     DispatchQueue.main.async {
                                         self.metrics = metrics
+                                        self.disks = sampler.disk.getDisks()
 
+                                        while self.usageGraph.count > 32 {
+                                            let _ = self.usageGraph.popFirst()
+                                        }
+                                        for (key, var usage) in self.diskUsageGraph {
+                                            if self.disks[key] == nil {
+                                                self.diskUsageGraph.removeValue(forKey: key)
+                                            } else {
+                                                while usage.count > 32 {
+                                                    let _ = usage.popFirst()
+                                                }
+                                                self.diskUsageGraph[key] = usage
+                                            }
+                                        }
+
+                                        let id = self.usageGraph.last?.id.advanced(by: 1) ?? UInt64(Date().timeIntervalSince1970.magnitude)
                                         self.usageGraph.append(
                                             UsagePoint(
-                                                id: self.usageGraph.last?.id.advanced(by: 1) ?? UInt64(Date().timeIntervalSince1970.magnitude),
+                                                id: id,
                                                 eCPUUsage: metrics.getECPUInfo()[0],
                                                 pCPUUsage: metrics.getPCPUInfo()[0],
                                                 gpuUsage: metrics.getGPUUsage(),
@@ -94,8 +141,17 @@ struct MenuView: View {
                                                 networkUsage: metrics.networkUsage
                                             )
                                         )
-                                        while self.usageGraph.count > 32 {
-                                            let _ = self.usageGraph.popFirst()
+                                        for (key, drive) in self.disks {
+                                            if let usage = metrics.diskUsage[key] {
+                                                if var q = self.diskUsageGraph[key] {
+                                                    q.append(DiskUsagePoint(id: id, name: drive.mediaName, usage: usage))
+                                                    self.diskUsageGraph[key] = q
+                                                } else {
+                                                    var points = DiskUsagePoint.mockData()
+                                                    points.append(DiskUsagePoint(id: id, name: drive.mediaName, usage: usage))
+                                                    self.diskUsageGraph[key] = points
+                                                }
+                                            }
                                         }
 
                                         self.updateMenu(metrics)
@@ -128,16 +184,19 @@ struct MenuView: View {
                 }
                 .clipShape(RoundedRectangle(cornerSize: CGSize(width: 8, height: 8)))
             }
-            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
 
             if let metrics = self.metrics {
                 Divider()
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 8)
+                    .padding(.bottom, 4)
+                    .padding(.horizontal, 12)
 
                 HStack {
+                    // CPU
                     VStack(spacing: 8) {
                         Text("\(self.sampler?.socInfo.chipName ?? "") (\(self.sampler?.socInfo.eCores ?? 0)E + \(self.sampler?.socInfo.pCores ?? 0)P + \(self.sampler?.socInfo.gpuCores ?? 0)GPU)")
+                            .font(.callout)
                             .fontWeight(.semibold)
                             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -149,7 +208,7 @@ struct MenuView: View {
                                         y: .value("Y", $0.eCpuUsage)
                                     )
                                     .interpolationMethod(.catmullRom)
-                                    .foregroundStyle(Color.accentColor)
+                                    .foregroundStyle(Color.blue)
                                     .mask { RectangleMark() }
                                 }
                                 .chartXAxis(.hidden)
@@ -201,12 +260,15 @@ struct MenuView: View {
 
                         HStack(alignment: .center) {
                             RoundedRectangle(cornerSize: CGSize(width: 10, height: 10))
-                                .foregroundStyle(Color.accentColor)
+                                .foregroundStyle(Color.blue)
                                 .frame(width: 10, height: 10, alignment: .center)
                             Text("E-CPU")
+                                .font(.callout)
                             Spacer()
                             Text(String(format: "%.2f%%", arguments: [metrics.getECPUInfo()[0]]))
+                                .font(.callout)
                             Text(String(format: "%.2f GHz", arguments: [metrics.getECPUInfo()[1]]))
+                                .font(.callout)
                         }
                         .padding(.vertical, 2)
 
@@ -215,9 +277,12 @@ struct MenuView: View {
                                 .foregroundStyle(Color.green)
                                 .frame(width: 10, height: 10, alignment: .center)
                             Text("P-CPU")
+                                .font(.callout)
                             Spacer()
                             Text(String(format: "%.2f%%", arguments: [metrics.getPCPUInfo()[0]]))
+                                .font(.callout)
                             Text(String(format: "%.2f GHz", arguments: [metrics.getPCPUInfo()[1]]))
+                                .font(.callout)
                         }
                         .padding(.vertical, 2)
 
@@ -226,22 +291,26 @@ struct MenuView: View {
                                 .foregroundStyle(Color.orange)
                                 .frame(width: 10, height: 10, alignment: .center)
                             Text("GPU")
+                                .font(.callout)
                             Spacer()
                             Text(String(format: "%.2f%%", arguments: [metrics.getGPUUsage()]))
+                                .font(.callout)
                             Text(String(format: "%.2f GHz", arguments: [metrics.getGPUFreq()]))
+                                .font(.callout)
                         }
                         .padding(.vertical, 2)
 
                         Spacer()
                     }
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, 12)
 
                     Divider()
                         .padding(.vertical, 6)
-                        .padding(.horizontal, 8)
 
+                    // RAM
                     VStack(spacing: 8) {
                         Text("Memory")
+                            .font(.callout)
                             .fontWeight(.semibold)
                             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -285,10 +354,13 @@ struct MenuView: View {
 
                         HStack(alignment: .center) {
                             RoundedRectangle(cornerSize: CGSize(width: 10, height: 10)).foregroundStyle(Color.red).frame(width: 10, height: 10, alignment: .center)
-                            Text("MEM")
+                            Text("Physical")
+                                .font(.callout)
                             Spacer()
                             Text(String(format: "%.2f%%", arguments: [metrics.getMemUsage()]))
+                                .font(.callout)
                             Text(String(format: "%.2f / %d GB", arguments: [metrics.getMemUsed(), metrics.getTotalMemory()]))
+                                .font(.callout)
                         }
                         .padding(.vertical, 2)
 
@@ -297,26 +369,78 @@ struct MenuView: View {
                                 .foregroundStyle(Color.yellow)
                                 .frame(width: 10, height: 10, alignment: .center)
                             Text("Swap")
+                                .font(.callout)
                             Spacer()
                             Text(String(format: "%.2f%%", arguments: [metrics.getSwapUsage()]))
+                                .font(.callout)
                             Text(String(format: "%.2f / %d GB", arguments: [metrics.getSwapUsed(), metrics.getTotalSwap()]))
+                                .font(.callout)
                         }
                         .padding(.vertical, 2)
 
                         Spacer()
                     }
-                    .padding(.horizontal, 8)
-
+                    .padding(.horizontal, 12)
                 }
+                .frame(maxHeight: .infinity)
 
                 Divider()
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 12)
 
+                // Power
+                HStack(alignment: .center) {
+                    HStack {
+                        Text("Power")
+                            .font(.callout)
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Spacer()
+                        Text(String(format: "%.2f W", arguments: [metrics.sysPower]))
+                            .font(.callout)
+                    }
+
+                    Divider()
+
+                    HStack {
+                        Text("CPU")
+                            .font(.callout)
+                        Spacer()
+                        Text(String(format: "%.2f W", arguments: [metrics.cpuPower / 1000.0]))
+                            .font(.callout)
+                    }
+
+                    Divider()
+
+                    HStack {
+                        Text("GPU")
+                            .font(.callout)
+                        Spacer()
+                        Text(String(format: "%.2f W", arguments: [metrics.gpuPower / 1000.0]))
+                            .font(.callout)
+                    }
+
+                    Divider()
+
+                    HStack {
+                        Text("ANE")
+                            .font(.callout)
+                        Spacer()
+                        Text(String(format: "%.2f W", arguments: [metrics.anePower / 1000.0]))
+                            .font(.callout)
+                    }
+                }
+                .padding(.horizontal, 12)
+
+                Divider()
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 12)
 
                 HStack {
+                    // Network
                     VStack(spacing: 8) {
                         Text("Network")
+                            .font(.callout)
                             .fontWeight(.semibold)
                             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -350,8 +474,10 @@ struct MenuView: View {
                         HStack(alignment: .center) {
                             RoundedRectangle(cornerSize: CGSize(width: 10, height: 10)).foregroundStyle(Color.indigo).frame(width: 10, height: 10, alignment: .center)
                             Text("Download")
+                                .font(.callout)
                             Spacer()
                             Text(Units(bytes: metrics.networkUsage.download).getReadableString())
+                                .font(.callout)
                         }
                         .padding(.vertical, 2)
 
@@ -360,8 +486,10 @@ struct MenuView: View {
                                 .foregroundStyle(Color.purple)
                                 .frame(width: 10, height: 10, alignment: .center)
                             Text("Upload")
+                                .font(.callout)
                             Spacer()
                             Text(Units(bytes: metrics.networkUsage.upload).getReadableString())
+                                .font(.callout)
                         }
                         .padding(.vertical, 2)
 
@@ -370,57 +498,135 @@ struct MenuView: View {
                                 .frame(width: 8, height: 8, alignment: .center)
                                 .padding(.leading, 2)
                             Text("Local IP")
+                                .font(.callout)
                             Spacer()
                             Text(sampler?.network.getLocalIP() ?? "--")
+                                .font(.callout)
                         }
                         .padding(.vertical, 2)
 
                         Spacer()
                     }
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, 12)
 
                     Divider()
                         .padding(.vertical, 6)
-                        .padding(.horizontal, 8)
 
-                    VStack(spacing: 8) {
-                        HStack {
-                            Text("Power")
-                                .fontWeight(.semibold)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                    // Disk
+                    ScrollView {
+                        ForEach(Array(self.diskUsageGraph.elements.enumerated()), id: \.offset) { index, element in
+                            VStack(spacing: 8) {
+                                HStack(alignment: .center) {
+                                    Text("Disk: \(self.disks[element.key]?.mediaName ?? "")")
+                                        .font(.callout)
+                                        .fontWeight(.semibold)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                            Spacer()
-                            Text(String(format: "%.2f W", arguments: [metrics.sysPower]))
+                                    Spacer()
+
+                                    Text("\(element.key) (\(self.disks[element.key]?.fileSystem.uppercased() ?? ""))")
+                                        .font(.system(size: 12))
+                                        .frame(maxWidth: .infinity, alignment: .trailing)
+                                }
+
+                                Chart {
+                                    ForEach(element.value, id: \.id) { usageInfo in
+                                        ForEach(usageInfo.usage, id: \.type) { diskUsage in
+                                            AreaMark(
+                                                x: .value("X", usageInfo.id),
+                                                y: .value("Y", diskUsage.value)
+                                            )
+                                            .interpolationMethod(.catmullRom)
+                                            .foregroundStyle(by: .value("OP Bytes type", diskUsage.type))
+                                            .mask { RectangleMark() }
+                                        }
+                                    }
+                                }
+                                .chartLegend(.hidden)
+                                .chartForegroundStyleScale([
+                                    DiskUsageType.read: Color.blue,
+                                    DiskUsageType.write: Color.mint,
+                                ])
+                                .chartXAxis(.hidden)
+                                .chartYAxis(.hidden)
+                                .chartXScale(domain: [self.diskUsageGraph[element.key]?.first?.id ?? 0, self.diskUsageGraph[element.key]?.last?.id ?? 0])
+                                .chartYScale(domain: getDiskGraphDomain(disk: element.key))
+                                .clipShape(self.graphShape)
+                                .overlay(self.graphShape.stroke(.gray, lineWidth: 1))
+                                .frame(height: max(62, 124 / CGFloat(self.disks.count)))
+                                .padding(.vertical, 2)
+
+                                HStack(alignment: .center) {
+                                    HStack(alignment: .center) {
+                                        RoundedRectangle(cornerSize: CGSize(width: 10, height: 10)).foregroundStyle(Color.blue).frame(width: 10, height: 10, alignment: .center)
+                                        Text("Read")
+                                            .font(.callout)
+                                        Spacer()
+                                        Text(Units(bytes: metrics.getDiskRead(key: element.key)).getReadableString())
+                                            .font(.callout)
+                                    }
+
+                                    Divider()
+                                        .padding(.vertical, 6)
+                                        .padding(.horizontal, 6)
+
+                                    HStack(alignment: .center) {
+                                        RoundedRectangle(cornerSize: CGSize(width: 10, height: 10))
+                                            .foregroundStyle(Color.mint)
+                                            .frame(width: 10, height: 10, alignment: .center)
+                                        Text("Write")
+                                            .font(.callout)
+                                        Spacer()
+                                        Text(Units(bytes: metrics.getDiskWrite(key: element.key)).getReadableString())
+                                            .font(.callout)
+                                    }
+                                }
+                                .padding(.vertical, 2)
+
+                                if let disk = self.disks[element.key] {
+                                    HStack(alignment: .center) {
+                                        Text("Available")
+                                            .font(.callout)
+                                        Spacer()
+                                        Text("\(DiskSize(size: self.disks[element.key]?.free ?? 0).getReadableMemory()) / \(DiskSize(size: self.disks[element.key]?.size ?? 0).getReadableMemory())")
+                                            .font(.callout)
+                                    }
+                                    .padding(.vertical, 2)
+
+                                    if !disk.root {
+                                        HStack(alignment: .center) {
+                                            Text("Connection")
+                                                .font(.callout)
+                                            Spacer()
+                                            Text(self.disks[element.key]?.connectionType.uppercased() ?? "--")
+                                                .font(.callout)
+                                        }
+                                        .padding(.vertical, 2)
+
+                                        HStack(alignment: .center) {
+                                            Text("Model")
+                                                .font(.callout)
+                                            Spacer()
+                                            Text(self.disks[element.key]?.model.uppercased() ?? "--")
+                                                .font(.callout)
+                                        }
+                                        .padding(.vertical, 2)
+                                    }
+                                }
+
+                                Spacer()
+                            }
+                            .padding(.horizontal, 12)
+
+                            if index != (self.disks.count - 1) {
+                                Divider().padding(6)
+                            }
                         }
-
-                        HStack {
-                            Text("CPU")
-                            Spacer()
-                            Text(String(format: "%.2f W", arguments: [metrics.cpuPower / 1000.0]))
-                        }
-                        .padding(.vertical, 2)
-
-                        HStack {
-                            Text("GPU")
-                            Spacer()
-                            Text(String(format: "%.2f W", arguments: [metrics.gpuPower / 1000.0]))
-                        }
-                        .padding(.vertical, 2)
-
-                        HStack {
-                            Text("ANE")
-                            Spacer()
-                            Text(String(format: "%.2f W", arguments: [metrics.anePower / 1000.0]))
-                        }
-                        .padding(.vertical, 2)
-
-                        Spacer()
                     }
-                    .padding(.horizontal, 8)
                 }
+                .frame(maxHeight: .infinity)
             }
         }
-        .padding(4)
     }
 }
 
