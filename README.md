@@ -8,6 +8,15 @@ References
 
 <img src="img/stats-light.png" width="310" height="310" /> <img src="img/stats-dark.png" width="310" height="310" />
 
+### Features
+
+- CPU Usage (E-Core, P-Cores)
+- GPU Usage
+- Memory Usage
+- Network Usage
+- Disk Usage
+- Power (Watts)
+
 ### Installation
 
 - Git clone the project.
