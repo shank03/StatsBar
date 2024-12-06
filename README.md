@@ -6,6 +6,8 @@ References
  - [Medium](https://medium.com/@vladkens/how-to-get-macos-power-metrics-with-rust-d42b0ad53967)
  - [Stats](https://github.com/exelban/stats)
 
+<img src="img/stats-bar.png" width="185" height="42" />
+
 <img src="img/stats-light.png" width="310" height="310" /> <img src="img/stats-dark.png" width="310" height="310" />
 
 ### Features
