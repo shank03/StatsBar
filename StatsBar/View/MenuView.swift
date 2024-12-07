@@ -80,11 +80,11 @@ struct MenuView: View {
     @State private var graphShape = RoundedRectangle(cornerRadius: 12)
 
     private func getNetworkGraphDomain() -> [Int64] {
-        let maxUsage = self.usageGraph.reduce(Int64(0)) { max($0, max($1.networkUsage[0].value, $1.networkUsage[1].value)) }
+        let maxUsage = self.usageGraph.reduce(Int64(0)) { max($0, max(abs($1.networkUsage[0].value), abs($1.networkUsage[1].value))) }
         return [maxUsage * -1, maxUsage]
     }
     private func getDiskGraphDomain(disk: String) -> [Int64] {
-        let maxUsage = (self.diskUsageGraph[disk] ?? []).reduce(Int64(0)) { max($0, max($1.usage[0].value, $1.usage[1].value)) }
+        let maxUsage = (self.diskUsageGraph[disk] ?? []).reduce(Int64(0)) { max($0, max(abs($1.usage[0].value), abs($1.usage[1].value))) }
         return [maxUsage * -1, maxUsage]
     }
 

@@ -161,11 +161,9 @@ class Network {
                 let if2 = ptr.withMemoryRebound(to: if_msghdr2.self, capacity: 0) { $0.pointee }
 
                 var name = [CChar](repeating: 0, count: Int(IF_NAMESIZE))
-                if let _ifName = if_indextoname(UInt32(if2.ifm_index), &name), String(cString: name) == self.infName {
-
-                    // TODO: For whatever reason, these values are doubled
-                    totalUpload += Int64(if2.ifm_data.ifi_obytes / 2)
-                    totalDownload += Int64(if2.ifm_data.ifi_ibytes / 2)
+                if let _ = if_indextoname(UInt32(if2.ifm_index), &name), String(cString: name) == self.infName {
+                    totalUpload += Int64(if2.ifm_data.ifi_obytes)
+                    totalDownload += Int64(if2.ifm_data.ifi_ibytes)
                 }
             }
 
