@@ -27,7 +27,7 @@ struct DiskUsagePoint: Identifiable {
     init(id: UInt64, name: String, usage: (read: Int64, write: Int64)) {
         self.id = id
         self.name = name
-        self.usage = [(usage.read, .read), (usage.write == 0 ? -1 : usage.write * -1, .write)]
+        self.usage = [(usage.read, .read), (usage.write * -1, .write)]
     }
 
     static func mockData() -> Deque<DiskUsagePoint> {
@@ -41,14 +41,14 @@ struct DiskUsagePoint: Identifiable {
 
 struct UsagePoint: Identifiable {
     let id: UInt64
-    let eCpuUsage: Double
-    let pCpuUsage: Double
-    let gpuUsage: Double
-    let memUsage: Double
-    let swapUsage: Double
+    let eCpuUsage: [Double]
+    let pCpuUsage: [Double]
+    let gpuUsage: [Double]
+    let memUsage: [Double]
+    let swapUsage: [Double]
     let networkUsage: [(value: Int64, type: NetworkUsageType)]
 
-    init(id: UInt64, eCPUUsage: Double, pCPUUsage: Double, gpuUsage: Double, memUsage: Double, swapUsage: Double, networkUsage: (upload: Int64, download: Int64)) {
+    init(id: UInt64, eCPUUsage: [Double], pCPUUsage: [Double], gpuUsage: [Double], memUsage: [Double], swapUsage: [Double], networkUsage: (upload: Int64, download: Int64)) {
         self.id = id
         self.eCpuUsage = eCPUUsage
         self.pCpuUsage = pCPUUsage
@@ -61,7 +61,7 @@ struct UsagePoint: Identifiable {
     static func mockData() -> Deque<UsagePoint> {
         var res: Deque<UsagePoint> = []
         for _ in 0...32 {
-            res.append(UsagePoint(id: res.last?.id.advanced(by: 1) ?? 1, eCPUUsage: 0, pCPUUsage: 0, gpuUsage: 0, memUsage: 0, swapUsage: 0, networkUsage: (0, 0)))
+            res.append(UsagePoint(id: res.last?.id.advanced(by: 1) ?? 1, eCPUUsage: [0, 0], pCPUUsage: [0, 0], gpuUsage: [0, 0], memUsage: [0, 0], swapUsage: [0, 0], networkUsage: (0, 0)))
         }
         return res
     }
@@ -78,6 +78,13 @@ struct MenuView: View {
     @State private var usageGraph: Deque<UsagePoint> = UsagePoint.mockData()
     @State private var diskUsageGraph: OrderedDictionary<String, Deque<DiskUsagePoint>> = [:]
     @State private var graphShape = RoundedRectangle(cornerRadius: 12)
+    @State private var gpuSelection: UInt64?
+    @State private var eCpuSelection: UInt64?
+    @State private var pCpuSelection: UInt64?
+    @State private var phyMemSelection: UInt64?
+    @State private var swapMemSelection: UInt64?
+    @State private var networkSelection: UInt64?
+    @State private var diskSelection: [String: UInt64?] = [:]
 
     private func getNetworkGraphDomain() -> [Int64] {
         let maxUsage = self.usageGraph.reduce(Int64(0)) { max($0, max(abs($1.networkUsage[0].value), abs($1.networkUsage[1].value))) }
@@ -86,6 +93,10 @@ struct MenuView: View {
     private func getDiskGraphDomain(disk: String) -> [Int64] {
         let maxUsage = (self.diskUsageGraph[disk] ?? []).reduce(Int64(0)) { max($0, max(abs($1.usage[0].value), abs($1.usage[1].value))) }
         return [maxUsage * -1, maxUsage]
+    }
+
+    private func binding(disk: String) -> Binding<UInt64?> {
+        return .init(get: { self.diskSelection[disk, default: nil] }, set: { self.diskSelection[disk] = $0 })
     }
 
     var body: some View {
@@ -133,11 +144,11 @@ struct MenuView: View {
                                         self.usageGraph.append(
                                             UsagePoint(
                                                 id: id,
-                                                eCPUUsage: metrics.getECPUInfo()[0],
-                                                pCPUUsage: metrics.getPCPUInfo()[0],
-                                                gpuUsage: metrics.getGPUUsage(),
-                                                memUsage: metrics.getMemUsage(),
-                                                swapUsage: metrics.getSwapUsage(),
+                                                eCPUUsage: metrics.getECPUInfo(),
+                                                pCPUUsage: metrics.getPCPUInfo(),
+                                                gpuUsage: [metrics.getGPUUsage(), metrics.getGPUFreq()],
+                                                memUsage: [metrics.getMemUsage(), metrics.getMemUsed()],
+                                                swapUsage: [metrics.getSwapUsage(), metrics.getSwapUsed()],
                                                 networkUsage: metrics.networkUsage
                                             )
                                         )
@@ -205,16 +216,35 @@ struct MenuView: View {
                                 Chart(self.usageGraph) {
                                     AreaMark(
                                         x: .value("X", $0.id),
-                                        y: .value("Y", $0.eCpuUsage)
+                                        y: .value("Y", $0.eCpuUsage[0])
                                     )
                                     .interpolationMethod(.catmullRom)
                                     .foregroundStyle(Color.blue)
-                                    .mask { RectangleMark() }
+
+                                    if let eCpuSelection {
+                                        RuleMark(x: .value("X", eCpuSelection))
+                                            .foregroundStyle(Color.blue)
+                                            .annotation(position: .top, overflowResolution: .init(x: .fit, y: .fit)) {
+                                                ZStack {
+                                                    if let usage = (self.usageGraph.first { $0.id == eCpuSelection }) {
+                                                        Text(String(format: "%.2f%%  %.2f GHz", arguments: usage.eCpuUsage))
+                                                            .font(.callout)
+                                                    }
+                                                }
+                                                .padding(.vertical, 4)
+                                                .padding(.horizontal, 6)
+                                                .background {
+                                                    RoundedRectangle(cornerRadius: 10)
+                                                        .foregroundStyle(Color.blue)
+                                                }
+                                            }
+                                    }
                                 }
                                 .chartXAxis(.hidden)
                                 .chartYAxis(.hidden)
                                 .chartXScale(domain: [self.usageGraph.first?.id ?? 0, self.usageGraph.last?.id ?? 0])
                                 .chartYScale(domain: [0, 100])
+                                .chartXSelection(value: $eCpuSelection)
                                 .clipShape(self.graphShape)
                                 .overlay(self.graphShape.stroke(.gray, lineWidth: 1))
 
@@ -223,16 +253,35 @@ struct MenuView: View {
                                 Chart(self.usageGraph) {
                                     AreaMark(
                                         x: .value("X", $0.id),
-                                        y: .value("Y", $0.pCpuUsage)
+                                        y: .value("Y", $0.pCpuUsage[0])
                                     )
                                     .interpolationMethod(.catmullRom)
                                     .foregroundStyle(Color.green)
-                                    .mask { RectangleMark() }
+
+                                    if let pCpuSelection {
+                                        RuleMark(x: .value("X", pCpuSelection))
+                                            .foregroundStyle(Color.green)
+                                            .annotation(position: .top, overflowResolution: .init(x: .fit, y: .fit)) {
+                                                ZStack {
+                                                    if let usage = (self.usageGraph.first { $0.id == pCpuSelection }) {
+                                                        Text(String(format: "%.2f%%  %.2f GHz", arguments: usage.pCpuUsage))
+                                                            .font(.callout)
+                                                    }
+                                                }
+                                                .padding(.vertical, 4)
+                                                .padding(.horizontal, 6)
+                                                .background {
+                                                    RoundedRectangle(cornerRadius: 10)
+                                                        .foregroundStyle(Color.green)
+                                                }
+                                            }
+                                    }
                                 }
                                 .chartXAxis(.hidden)
                                 .chartYAxis(.hidden)
                                 .chartXScale(domain: [self.usageGraph.first?.id ?? 0, self.usageGraph.last?.id ?? 0])
                                 .chartYScale(domain: [0, 100])
+                                .chartXSelection(value: $pCpuSelection)
                                 .clipShape(self.graphShape)
                                 .overlay(self.graphShape.stroke(.gray, lineWidth: 1))
                             }
@@ -242,16 +291,35 @@ struct MenuView: View {
                             Chart(self.usageGraph) {
                                 AreaMark(
                                     x: .value("X", $0.id),
-                                    y: .value("Y", $0.gpuUsage)
+                                    y: .value("Y", $0.gpuUsage[0])
                                 )
                                 .interpolationMethod(.catmullRom)
                                 .foregroundStyle(Color.orange)
-                                .mask { RectangleMark() }
+
+                                if let gpuSelection {
+                                    RuleMark(x: .value("X", gpuSelection))
+                                        .foregroundStyle(Color.orange)
+                                        .annotation(position: .top, overflowResolution: .init(x: .fit, y: .fit)) {
+                                            ZStack {
+                                                if let usage = (self.usageGraph.first { $0.id == gpuSelection }) {
+                                                    Text(String(format: "%.2f%%  %.2f GHz", arguments: usage.gpuUsage))
+                                                        .font(.callout)
+                                                }
+                                            }
+                                            .padding(.vertical, 4)
+                                            .padding(.horizontal, 6)
+                                            .background {
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .foregroundStyle(Color.orange)
+                                            }
+                                        }
+                                }
                             }
                             .chartXAxis(.hidden)
                             .chartYAxis(.hidden)
                             .chartXScale(domain: [self.usageGraph.first?.id ?? 0, self.usageGraph.last?.id ?? 0])
                             .chartYScale(domain: [0, 100])
+                            .chartXSelection(value: $gpuSelection)
                             .clipShape(self.graphShape)
                             .overlay(self.graphShape.stroke(.gray, lineWidth: 1))
                         }
@@ -265,9 +333,7 @@ struct MenuView: View {
                             Text("E-CPU")
                                 .font(.callout)
                             Spacer()
-                            Text(String(format: "%.2f%%", arguments: [metrics.getECPUInfo()[0]]))
-                                .font(.callout)
-                            Text(String(format: "%.2f GHz", arguments: [metrics.getECPUInfo()[1]]))
+                            Text(String(format: "%.2f%%  %.2f GHz", arguments: metrics.getECPUInfo()))
                                 .font(.callout)
                         }
                         .padding(.vertical, 2)
@@ -279,9 +345,7 @@ struct MenuView: View {
                             Text("P-CPU")
                                 .font(.callout)
                             Spacer()
-                            Text(String(format: "%.2f%%", arguments: [metrics.getPCPUInfo()[0]]))
-                                .font(.callout)
-                            Text(String(format: "%.2f GHz", arguments: [metrics.getPCPUInfo()[1]]))
+                            Text(String(format: "%.2f%%  %.2f GHz", arguments: metrics.getPCPUInfo()))
                                 .font(.callout)
                         }
                         .padding(.vertical, 2)
@@ -293,9 +357,7 @@ struct MenuView: View {
                             Text("GPU")
                                 .font(.callout)
                             Spacer()
-                            Text(String(format: "%.2f%%", arguments: [metrics.getGPUUsage()]))
-                                .font(.callout)
-                            Text(String(format: "%.2f GHz", arguments: [metrics.getGPUFreq()]))
+                            Text(String(format: "%.2f%%  %.2f GHz", arguments: [metrics.getGPUUsage(), metrics.getGPUFreq()]))
                                 .font(.callout)
                         }
                         .padding(.vertical, 2)
@@ -318,16 +380,35 @@ struct MenuView: View {
                             Chart(self.usageGraph) {
                                 AreaMark(
                                     x: .value("X", $0.id),
-                                    y: .value("Y", $0.memUsage)
+                                    y: .value("Y", $0.memUsage[0])
                                 )
                                 .interpolationMethod(.catmullRom)
                                 .foregroundStyle(Color.red)
-                                .mask { RectangleMark() }
+
+                                if let phyMemSelection {
+                                    RuleMark(x: .value("X", phyMemSelection))
+                                        .foregroundStyle(Color.red)
+                                        .annotation(position: .top, overflowResolution: .init(x: .fit, y: .fit)) {
+                                            ZStack {
+                                                if let usage = (self.usageGraph.first { $0.id == phyMemSelection }) {
+                                                    Text(String(format: "%.2f%%  %.2f GB", arguments: usage.memUsage))
+                                                        .font(.callout)
+                                                }
+                                            }
+                                            .padding(.vertical, 4)
+                                            .padding(.horizontal, 6)
+                                            .background {
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .foregroundStyle(Color.red)
+                                            }
+                                        }
+                                }
                             }
                             .chartXAxis(.hidden)
                             .chartYAxis(.hidden)
                             .chartXScale(domain: [self.usageGraph.first?.id ?? 0, self.usageGraph.last?.id ?? 0])
                             .chartYScale(domain: [0, 100])
+                            .chartXSelection(value: $phyMemSelection)
                             .clipShape(self.graphShape)
                             .overlay(self.graphShape.stroke(.gray, lineWidth: 1))
 
@@ -336,16 +417,35 @@ struct MenuView: View {
                             Chart(self.usageGraph) {
                                 AreaMark(
                                     x: .value("X", $0.id),
-                                    y: .value("Y", $0.swapUsage)
+                                    y: .value("Y", $0.swapUsage[0])
                                 )
                                 .interpolationMethod(.catmullRom)
                                 .foregroundStyle(Color.yellow)
-                                .mask { RectangleMark() }
+
+                                if let swapMemSelection {
+                                    RuleMark(x: .value("X", swapMemSelection))
+                                        .foregroundStyle(Color.yellow)
+                                        .annotation(position: .top, overflowResolution: .init(x: .fit, y: .fit)) {
+                                            ZStack {
+                                                if let usage = (self.usageGraph.first { $0.id == swapMemSelection }) {
+                                                    Text(String(format: "%.2f%%  %.2f GB", arguments: usage.swapUsage))
+                                                        .font(.callout)
+                                                }
+                                            }
+                                            .padding(.vertical, 4)
+                                            .padding(.horizontal, 6)
+                                            .background {
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .foregroundStyle(Color.yellow)
+                                            }
+                                        }
+                                }
                             }
                             .chartXAxis(.hidden)
                             .chartYAxis(.hidden)
                             .chartXScale(domain: [self.usageGraph.first?.id ?? 0, self.usageGraph.last?.id ?? 0])
                             .chartYScale(domain: [0, 100])
+                            .chartXSelection(value: $swapMemSelection)
                             .clipShape(self.graphShape)
                             .overlay(self.graphShape.stroke(.gray, lineWidth: 1))
                         }
@@ -453,7 +553,48 @@ struct MenuView: View {
                                     )
                                     .interpolationMethod(.catmullRom)
                                     .foregroundStyle(by: .value("Bytes type", networkUsage.type))
-                                    .mask { RectangleMark() }
+
+                                    if let networkSelection {
+                                        if let usage = (self.usageGraph.first { $0.id == networkSelection }) {
+                                            RuleMark(x: .value("X", networkSelection), yStart: 0)
+                                                .foregroundStyle(
+                                                    LinearGradient(
+                                                        stops: [
+                                                            Gradient.Stop(color: .purple, location: 0.0),
+                                                            Gradient.Stop(color: .purple, location: 0.5),
+                                                            Gradient.Stop(color: .indigo, location: 0.50001),
+                                                            Gradient.Stop(color: .indigo, location: 1.0),
+                                                        ],
+                                                        startPoint: .bottom,
+                                                        endPoint: .top
+                                                    )
+                                                )
+                                                .annotation(position: .top, overflowResolution: .init(x: .fit, y: .fit)) {
+                                                    ZStack {
+                                                        Text(Units(bytes: usage.networkUsage[1].value).getReadableString())
+                                                            .font(.callout)
+                                                    }
+                                                    .padding(.vertical, 4)
+                                                    .padding(.horizontal, 6)
+                                                    .background {
+                                                        RoundedRectangle(cornerRadius: 10)
+                                                            .foregroundStyle(Color.indigo)
+                                                    }
+                                                }
+                                                .annotation(position: .bottom, overflowResolution: .init(x: .fit, y: .fit)) {
+                                                    ZStack {
+                                                        Text(Units(bytes: abs(usage.networkUsage[0].value)).getReadableString())
+                                                            .font(.callout)
+                                                    }
+                                                    .padding(.vertical, 4)
+                                                    .padding(.horizontal, 6)
+                                                    .background {
+                                                        RoundedRectangle(cornerRadius: 10)
+                                                            .foregroundStyle(Color.purple)
+                                                    }
+                                                }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -466,6 +607,7 @@ struct MenuView: View {
                         .chartYAxis(.hidden)
                         .chartXScale(domain: [self.usageGraph.first?.id ?? 0, self.usageGraph.last?.id ?? 0])
                         .chartYScale(domain: getNetworkGraphDomain())
+                        .chartXSelection(value: $networkSelection)
                         .clipShape(self.graphShape)
                         .overlay(self.graphShape.stroke(.gray, lineWidth: 1))
                         .frame(height: 124)
@@ -538,7 +680,48 @@ struct MenuView: View {
                                             )
                                             .interpolationMethod(.catmullRom)
                                             .foregroundStyle(by: .value("OP Bytes type", diskUsage.type))
-                                            .mask { RectangleMark() }
+
+                                            if let selection = self.diskSelection[element.key], let selection {
+                                                if let usage = (self.diskUsageGraph[element.key]?.first { $0.id == selection }) {
+                                                    RuleMark(x: .value("X", selection), yStart: 0)
+                                                        .foregroundStyle(
+                                                            LinearGradient(
+                                                                stops: [
+                                                                    Gradient.Stop(color: .mint, location: 0.0),
+                                                                    Gradient.Stop(color: .mint, location: 0.5),
+                                                                    Gradient.Stop(color: .blue, location: 0.50001),
+                                                                    Gradient.Stop(color: .blue, location: 1.0),
+                                                                ],
+                                                                startPoint: .bottom,
+                                                                endPoint: .top
+                                                            )
+                                                        )
+                                                        .annotation(position: .top, overflowResolution: .init(x: .fit, y: .fit)) {
+                                                            ZStack {
+                                                                Text(Units(bytes: usage.usage[0].value).getReadableString())
+                                                                    .font(.callout)
+                                                            }
+                                                            .padding(.vertical, 4)
+                                                            .padding(.horizontal, 6)
+                                                            .background {
+                                                                RoundedRectangle(cornerRadius: 10)
+                                                                    .foregroundStyle(Color.blue)
+                                                            }
+                                                        }
+                                                        .annotation(position: .bottom, overflowResolution: .init(x: .fit, y: .fit)) {
+                                                            ZStack {
+                                                                Text(Units(bytes: abs(usage.usage[1].value)).getReadableString())
+                                                                    .font(.callout)
+                                                            }
+                                                            .padding(.vertical, 4)
+                                                            .padding(.horizontal, 6)
+                                                            .background {
+                                                                RoundedRectangle(cornerRadius: 10)
+                                                                    .foregroundStyle(Color.mint)
+                                                            }
+                                                        }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -551,6 +734,7 @@ struct MenuView: View {
                                 .chartYAxis(.hidden)
                                 .chartXScale(domain: [self.diskUsageGraph[element.key]?.first?.id ?? 0, self.diskUsageGraph[element.key]?.last?.id ?? 0])
                                 .chartYScale(domain: getDiskGraphDomain(disk: element.key))
+                                .chartXSelection(value: self.binding(disk: element.key))
                                 .clipShape(self.graphShape)
                                 .overlay(self.graphShape.stroke(.gray, lineWidth: 1))
                                 .frame(height: max(62, 124 / CGFloat(self.disks.count)))
