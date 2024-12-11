@@ -27,7 +27,7 @@ struct DiskUsagePoint: Identifiable {
     init(id: UInt64, name: String, usage: (read: Int64, write: Int64)) {
         self.id = id
         self.name = name
-        self.usage = [(usage.read, .read), (usage.write * -1, .write)]
+        self.usage = [(usage.read, .read), (usage.write > 0 ? 0 : usage.write * -1, .write)]
     }
 
     static func mockData() -> Deque<DiskUsagePoint> {
@@ -553,48 +553,48 @@ struct MenuView: View {
                                     )
                                     .interpolationMethod(.catmullRom)
                                     .foregroundStyle(by: .value("Bytes type", networkUsage.type))
+                                }
+                            }
 
-                                    if let networkSelection {
-                                        if let usage = (self.usageGraph.first { $0.id == networkSelection }) {
-                                            RuleMark(x: .value("X", networkSelection), yStart: 0)
-                                                .foregroundStyle(
-                                                    LinearGradient(
-                                                        stops: [
-                                                            Gradient.Stop(color: .purple, location: 0.0),
-                                                            Gradient.Stop(color: .purple, location: 0.5),
-                                                            Gradient.Stop(color: .indigo, location: 0.50001),
-                                                            Gradient.Stop(color: .indigo, location: 1.0),
-                                                        ],
-                                                        startPoint: .bottom,
-                                                        endPoint: .top
-                                                    )
-                                                )
-                                                .annotation(position: .top, overflowResolution: .init(x: .fit, y: .fit)) {
-                                                    ZStack {
-                                                        Text(Units(bytes: usage.networkUsage[1].value).getReadableString())
-                                                            .font(.callout)
-                                                    }
-                                                    .padding(.vertical, 4)
-                                                    .padding(.horizontal, 6)
-                                                    .background {
-                                                        RoundedRectangle(cornerRadius: 10)
-                                                            .foregroundStyle(Color.indigo)
-                                                    }
-                                                }
-                                                .annotation(position: .bottom, overflowResolution: .init(x: .fit, y: .fit)) {
-                                                    ZStack {
-                                                        Text(Units(bytes: abs(usage.networkUsage[0].value)).getReadableString())
-                                                            .font(.callout)
-                                                    }
-                                                    .padding(.vertical, 4)
-                                                    .padding(.horizontal, 6)
-                                                    .background {
-                                                        RoundedRectangle(cornerRadius: 10)
-                                                            .foregroundStyle(Color.purple)
-                                                    }
-                                                }
+                            if let networkSelection {
+                                if let usage = (self.usageGraph.first { $0.id == networkSelection }) {
+                                    RuleMark(x: .value("X", networkSelection), yStart: 0)
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                stops: [
+                                                    Gradient.Stop(color: .purple, location: 0.0),
+                                                    Gradient.Stop(color: .purple, location: 0.5),
+                                                    Gradient.Stop(color: .indigo, location: 0.50001),
+                                                    Gradient.Stop(color: .indigo, location: 1.0),
+                                                ],
+                                                startPoint: .bottom,
+                                                endPoint: .top
+                                            )
+                                        )
+                                        .annotation(position: .top, overflowResolution: .init(x: .fit, y: .fit)) {
+                                            ZStack {
+                                                Text(Units(bytes: usage.networkUsage[1].value).getReadableString())
+                                                    .font(.callout)
+                                            }
+                                            .padding(.vertical, 4)
+                                            .padding(.horizontal, 6)
+                                            .background {
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .foregroundStyle(Color.indigo)
+                                            }
                                         }
-                                    }
+                                        .annotation(position: .bottom, overflowResolution: .init(x: .fit, y: .fit)) {
+                                            ZStack {
+                                                Text(Units(bytes: abs(usage.networkUsage[0].value)).getReadableString())
+                                                    .font(.callout)
+                                            }
+                                            .padding(.vertical, 4)
+                                            .padding(.horizontal, 6)
+                                            .background {
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .foregroundStyle(Color.purple)
+                                            }
+                                        }
                                 }
                             }
                         }
@@ -680,48 +680,48 @@ struct MenuView: View {
                                             )
                                             .interpolationMethod(.catmullRom)
                                             .foregroundStyle(by: .value("OP Bytes type", diskUsage.type))
+                                        }
+                                    }
 
-                                            if let selection = self.diskSelection[element.key], let selection {
-                                                if let usage = (self.diskUsageGraph[element.key]?.first { $0.id == selection }) {
-                                                    RuleMark(x: .value("X", selection), yStart: 0)
-                                                        .foregroundStyle(
-                                                            LinearGradient(
-                                                                stops: [
-                                                                    Gradient.Stop(color: .mint, location: 0.0),
-                                                                    Gradient.Stop(color: .mint, location: 0.5),
-                                                                    Gradient.Stop(color: .blue, location: 0.50001),
-                                                                    Gradient.Stop(color: .blue, location: 1.0),
-                                                                ],
-                                                                startPoint: .bottom,
-                                                                endPoint: .top
-                                                            )
-                                                        )
-                                                        .annotation(position: .top, overflowResolution: .init(x: .fit, y: .fit)) {
-                                                            ZStack {
-                                                                Text(Units(bytes: usage.usage[0].value).getReadableString())
-                                                                    .font(.callout)
-                                                            }
-                                                            .padding(.vertical, 4)
-                                                            .padding(.horizontal, 6)
-                                                            .background {
-                                                                RoundedRectangle(cornerRadius: 10)
-                                                                    .foregroundStyle(Color.blue)
-                                                            }
-                                                        }
-                                                        .annotation(position: .bottom, overflowResolution: .init(x: .fit, y: .fit)) {
-                                                            ZStack {
-                                                                Text(Units(bytes: abs(usage.usage[1].value)).getReadableString())
-                                                                    .font(.callout)
-                                                            }
-                                                            .padding(.vertical, 4)
-                                                            .padding(.horizontal, 6)
-                                                            .background {
-                                                                RoundedRectangle(cornerRadius: 10)
-                                                                    .foregroundStyle(Color.mint)
-                                                            }
-                                                        }
+                                    if let selection = self.diskSelection[element.key], let selection {
+                                        if let usage = (self.diskUsageGraph[element.key]?.first { $0.id == selection }) {
+                                            RuleMark(x: .value("X", selection), yStart: 0)
+                                                .foregroundStyle(
+                                                    LinearGradient(
+                                                        stops: [
+                                                            Gradient.Stop(color: .mint, location: 0.0),
+                                                            Gradient.Stop(color: .mint, location: 0.5),
+                                                            Gradient.Stop(color: .blue, location: 0.50001),
+                                                            Gradient.Stop(color: .blue, location: 1.0),
+                                                        ],
+                                                        startPoint: .bottom,
+                                                        endPoint: .top
+                                                    )
+                                                )
+                                                .annotation(position: .top, overflowResolution: .init(x: .fit, y: .fit)) {
+                                                    ZStack {
+                                                        Text(Units(bytes: usage.usage[0].value).getReadableString())
+                                                            .font(.callout)
+                                                    }
+                                                    .padding(.vertical, 4)
+                                                    .padding(.horizontal, 6)
+                                                    .background {
+                                                        RoundedRectangle(cornerRadius: 10)
+                                                            .foregroundStyle(Color.blue)
+                                                    }
                                                 }
-                                            }
+                                                .annotation(position: .bottom, overflowResolution: .init(x: .fit, y: .fit)) {
+                                                    ZStack {
+                                                        Text(Units(bytes: abs(usage.usage[1].value)).getReadableString())
+                                                            .font(.callout)
+                                                    }
+                                                    .padding(.vertical, 4)
+                                                    .padding(.horizontal, 6)
+                                                    .background {
+                                                        RoundedRectangle(cornerRadius: 10)
+                                                            .foregroundStyle(Color.mint)
+                                                    }
+                                                }
                                         }
                                     }
                                 }
