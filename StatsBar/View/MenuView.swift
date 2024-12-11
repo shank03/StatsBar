@@ -8,6 +8,7 @@
 import SwiftUI
 import Charts
 import Collections
+import LaunchAtLogin
 
 enum NetworkUsageType: String, Plottable {
     case upload = "upload"
@@ -194,6 +195,10 @@ struct MenuView: View {
                         .padding(.vertical, 4)
                 }
                 .clipShape(RoundedRectangle(cornerSize: CGSize(width: 8, height: 8)))
+
+                Spacer()
+
+                LaunchAtLogin.Toggle("Launch at login")
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 12)

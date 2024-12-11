@@ -13,6 +13,7 @@
 		D455C13A2CF502860086065B /* HashTreeCollections in Frameworks */ = {isa = PBXBuildFile; productRef = D455C1392CF502860086065B /* HashTreeCollections */; };
 		D455C13C2CF502860086065B /* HeapModule in Frameworks */ = {isa = PBXBuildFile; productRef = D455C13B2CF502860086065B /* HeapModule */; };
 		D455C13E2CF502860086065B /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = D455C13D2CF502860086065B /* OrderedCollections */; };
+		D4790CCA2D09998700D9C2AE /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = D4790CC92D09998700D9C2AE /* LaunchAtLogin */; };
 		D4EB3AB22CF1C3E200953F83 /* libIOReport.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EB3AAF2CF1BC2300953F83 /* libIOReport.tbd */; };
 /* End PBXBuildFile section */
 
@@ -69,6 +70,7 @@
 				D455C1342CF502860086065B /* BitCollections in Frameworks */,
 				D455C13C2CF502860086065B /* HeapModule in Frameworks */,
 				D455C13E2CF502860086065B /* OrderedCollections in Frameworks */,
+				D4790CCA2D09998700D9C2AE /* LaunchAtLogin in Frameworks */,
 				D4EB3AB22CF1C3E200953F83 /* libIOReport.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -145,6 +147,7 @@
 				D455C1392CF502860086065B /* HashTreeCollections */,
 				D455C13B2CF502860086065B /* HeapModule */,
 				D455C13D2CF502860086065B /* OrderedCollections */,
+				D4790CC92D09998700D9C2AE /* LaunchAtLogin */,
 			);
 			productName = StatsBar;
 			productReference = D41EC85C2CE24DF600452C1F /* StatsBar.app */;
@@ -230,6 +233,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				D455C1322CF502860086065B /* XCRemoteSwiftPackageReference "swift-collections" */,
+				D4790CC82D09998700D9C2AE /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D41EC85D2CE24DF600452C1F /* Products */;
@@ -434,7 +438,7 @@
 				CODE_SIGN_ENTITLEMENTS = StatsBar/StatsBar.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_ASSET_PATHS = "\"StatsBar/Preview Content\"";
 				DEVELOPMENT_TEAM = TRS835V4P2;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -447,7 +451,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 1.6.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.shank03.StatsBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -465,7 +469,7 @@
 				CODE_SIGN_ENTITLEMENTS = StatsBar/StatsBar.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_ASSET_PATHS = "\"StatsBar/Preview Content\"";
 				DEVELOPMENT_TEAM = TRS835V4P2;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -478,7 +482,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 1.6.1;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.shank03.StatsBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -606,6 +610,14 @@
 				minimumVersion = 1.1.4;
 			};
 		};
+		D4790CC82D09998700D9C2AE /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/LaunchAtLogin-Modern";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -638,6 +650,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D455C1322CF502860086065B /* XCRemoteSwiftPackageReference "swift-collections" */;
 			productName = OrderedCollections;
+		};
+		D4790CC92D09998700D9C2AE /* LaunchAtLogin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D4790CC82D09998700D9C2AE /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */;
+			productName = LaunchAtLogin;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
