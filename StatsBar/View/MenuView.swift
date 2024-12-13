@@ -28,7 +28,7 @@ struct DiskUsagePoint: Identifiable {
     init(id: UInt64, name: String, usage: (read: Int64, write: Int64)) {
         self.id = id
         self.name = name
-        self.usage = [(usage.read, .read), (usage.write > 0 ? 0 : usage.write * -1, .write)]
+        self.usage = [(usage.read, .read), (max(0, usage.write) * -1, .write)]
     }
 
     static func mockData() -> Deque<DiskUsagePoint> {
