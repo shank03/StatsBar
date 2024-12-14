@@ -9,6 +9,16 @@ import SwiftUI
 import Charts
 import Collections
 import LaunchAtLogin
+import AppKit
+
+extension Color {
+    func adaptedTextColor(_ env: EnvironmentValues) -> Color {
+        let components = self.resolve(in: env)
+        let luminance = 0.2126 * Double(components.red) + 0.7152 * Double(components.green) + 0.0722 * Double(components.blue)
+
+        return luminance > 0.5 ? Color.black : Color.white
+    }
+}
 
 enum NetworkUsageType: String, Plottable {
     case upload = "upload"
@@ -69,6 +79,7 @@ struct UsagePoint: Identifiable {
 }
 
 struct MenuView: View {
+    @Environment(\.self) var environment
 
     @State private var isRunning: Bool = false
     @State private var sampler: Sampler?
@@ -234,6 +245,7 @@ struct MenuView: View {
                                                     if let usage = (self.usageGraph.first { $0.id == eCpuSelection }) {
                                                         Text(String(format: "%.2f%%  %.2f GHz", arguments: usage.eCpuUsage))
                                                             .font(.callout)
+                                                            .foregroundStyle(Color.blue.adaptedTextColor(self.environment))
                                                     }
                                                 }
                                                 .padding(.vertical, 4)
@@ -271,6 +283,7 @@ struct MenuView: View {
                                                     if let usage = (self.usageGraph.first { $0.id == pCpuSelection }) {
                                                         Text(String(format: "%.2f%%  %.2f GHz", arguments: usage.pCpuUsage))
                                                             .font(.callout)
+                                                            .foregroundStyle(Color.green.adaptedTextColor(self.environment))
                                                     }
                                                 }
                                                 .padding(.vertical, 4)
@@ -309,6 +322,7 @@ struct MenuView: View {
                                                 if let usage = (self.usageGraph.first { $0.id == gpuSelection }) {
                                                     Text(String(format: "%.2f%%  %.2f GHz", arguments: usage.gpuUsage))
                                                         .font(.callout)
+                                                        .foregroundStyle(Color.orange.adaptedTextColor(self.environment))
                                                 }
                                             }
                                             .padding(.vertical, 4)
@@ -398,6 +412,7 @@ struct MenuView: View {
                                                 if let usage = (self.usageGraph.first { $0.id == phyMemSelection }) {
                                                     Text(String(format: "%.2f%%  %.2f GB", arguments: usage.memUsage))
                                                         .font(.callout)
+                                                        .foregroundStyle(Color.red.adaptedTextColor(self.environment))
                                                 }
                                             }
                                             .padding(.vertical, 4)
@@ -435,6 +450,7 @@ struct MenuView: View {
                                                 if let usage = (self.usageGraph.first { $0.id == swapMemSelection }) {
                                                     Text(String(format: "%.2f%%  %.2f GB", arguments: usage.swapUsage))
                                                         .font(.callout)
+                                                        .foregroundStyle(Color.yellow.adaptedTextColor(self.environment))
                                                 }
                                             }
                                             .padding(.vertical, 4)
@@ -580,6 +596,7 @@ struct MenuView: View {
                                             ZStack {
                                                 Text(Units(bytes: usage.networkUsage[1].value).getReadableString())
                                                     .font(.callout)
+                                                    .foregroundStyle(Color.indigo.adaptedTextColor(self.environment))
                                             }
                                             .padding(.vertical, 4)
                                             .padding(.horizontal, 6)
@@ -592,6 +609,7 @@ struct MenuView: View {
                                             ZStack {
                                                 Text(Units(bytes: abs(usage.networkUsage[0].value)).getReadableString())
                                                     .font(.callout)
+                                                    .foregroundStyle(Color.purple.adaptedTextColor(self.environment))
                                             }
                                             .padding(.vertical, 4)
                                             .padding(.horizontal, 6)
@@ -707,6 +725,7 @@ struct MenuView: View {
                                                     ZStack {
                                                         Text(Units(bytes: usage.usage[0].value).getReadableString())
                                                             .font(.callout)
+                                                            .foregroundStyle(Color.blue.adaptedTextColor(self.environment))
                                                     }
                                                     .padding(.vertical, 4)
                                                     .padding(.horizontal, 6)
@@ -719,6 +738,7 @@ struct MenuView: View {
                                                     ZStack {
                                                         Text(Units(bytes: abs(usage.usage[1].value)).getReadableString())
                                                             .font(.callout)
+                                                            .foregroundStyle(Color.mint.adaptedTextColor(self.environment))
                                                     }
                                                     .padding(.vertical, 4)
                                                     .padding(.horizontal, 6)
