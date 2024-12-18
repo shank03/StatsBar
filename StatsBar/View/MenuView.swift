@@ -41,10 +41,10 @@ struct DiskUsagePoint: Identifiable {
         self.usage = [(usage.read, .read), (max(0, usage.write) * -1, .write)]
     }
 
-    static func mockData() -> Deque<DiskUsagePoint> {
+    static func mockData(sId: UInt64? = nil) -> Deque<DiskUsagePoint> {
         var res: Deque<DiskUsagePoint> = []
         for _ in 0...32 {
-            res.append(DiskUsagePoint(id: res.last?.id.advanced(by: 1) ?? 1, name: "", usage: (0, 0)))
+            res.append(DiskUsagePoint(id: res.last?.id.advanced(by: 1) ?? sId ?? 1, name: "", usage: (0, 0)))
         }
         return res
     }
@@ -170,7 +170,7 @@ struct MenuView: View {
                                                     q.append(DiskUsagePoint(id: id, name: drive.mediaName, usage: usage))
                                                     self.diskUsageGraph[key] = q
                                                 } else {
-                                                    var points = DiskUsagePoint.mockData()
+                                                    var points = DiskUsagePoint.mockData(sId: id - 33)
                                                     points.append(DiskUsagePoint(id: id, name: drive.mediaName, usage: usage))
                                                     self.diskUsageGraph[key] = points
                                                 }
