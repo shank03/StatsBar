@@ -36,6 +36,8 @@ struct Sampler {
         for (samples, dt) in sampleData {
             var eCpuUsages = [(UInt32, Float32)]()
             var pCpuUsages = [(UInt32, Float32)]()
+            var eCores = [Float32](repeating: 0, count: self.socInfo.eCores)
+            var pCores = [Float32](repeating: 0, count: self.socInfo.pCores)
             var gpuUsage: (UInt32, Float32) = (0, 0)
             var cpuPower = Float32(0)
             var gpuPower = Float32(0)
@@ -44,12 +46,20 @@ struct Sampler {
             for sample in samples {
                 if sample.group == "CPU Stats" && sample.subGroup == CPU_FREQ_SUBG {
                     if sample.channel.starts(with: "ECPU") {
-                        eCpuUsages.append(self.calculateFrequencies(dict: sample.delta, freqs: self.socInfo.eCpuFreqs))
+                        let info = self.calculateFrequencies(dict: sample.delta, freqs: self.socInfo.eCpuFreqs)
+                        eCpuUsages.append(info)
+
+                        let idx = Int(sample.channel.last?.asciiValue ?? 48) - 48
+                        eCores[idx] = info.usage
                         continue
                     }
 
                     if sample.channel.starts(with: "PCPU") {
-                        pCpuUsages.append(self.calculateFrequencies(dict: sample.delta, freqs: self.socInfo.pCpuFreqs))
+                        let info = self.calculateFrequencies(dict: sample.delta, freqs: self.socInfo.pCpuFreqs)
+                        pCpuUsages.append(info)
+
+                        let idx = Int(sample.channel.last?.asciiValue ?? 48) - 48
+                        pCores[idx] = info.usage
                         continue
                     }
                 }
@@ -76,6 +86,8 @@ struct Sampler {
             let metrics = Metrics(
                 eCpuUsage: self.calcuateAggregateFrequencies(items: eCpuUsages, freqs: self.socInfo.eCpuFreqs),
                 pCpuUsage: self.calcuateAggregateFrequencies(items: pCpuUsages, freqs: self.socInfo.pCpuFreqs),
+                eCores: eCores,
+                pCores: pCores,
                 gpuUsage: gpuUsage,
                 cpuPower: cpuPower,
                 gpuPower: gpuPower,
@@ -89,6 +101,15 @@ struct Sampler {
             results.append(metrics)
         }
 
+        var eCores = [Float32](repeating: 0, count: self.socInfo.eCores)
+        var pCores = [Float32](repeating: 0, count: self.socInfo.pCores)
+        for i in 0..<self.socInfo.eCores {
+            eCores[i] = results.reduce(0, { $0 + $1.eCores[i] }) / Float32(measures)
+        }
+        for i in 0..<self.socInfo.pCores{
+            pCores[i] = results.reduce(0, { $0 + $1.pCores[i] }) / Float32(measures)
+        }
+
         let metrics = Metrics(
             eCpuUsage: (
                 results.reduce(0, { $0 + $1.eCpuUsage.0 }) / UInt32(measures),
@@ -98,6 +119,8 @@ struct Sampler {
                 results.reduce(0, { $0 + $1.pCpuUsage.0 }) / UInt32(measures),
                 results.reduce(0, { $0 + $1.pCpuUsage.1 }) / Float32(measures)
             ),
+            eCores: eCores,
+            pCores: pCores,
             gpuUsage: (
                 results.reduce(0, { $0 + $1.gpuUsage.0 }) / UInt32(measures),
                 results.reduce(0, { $0 + $1.gpuUsage.1 }) / Float32(measures)
@@ -115,7 +138,7 @@ struct Sampler {
         return metrics
     }
 
-    private func calculateFrequencies(dict: CFDictionary, freqs: [UInt32]) -> (freq: UInt32, fromMax: Float32){
+    private func calculateFrequencies(dict: CFDictionary, freqs: [UInt32]) -> (freq: UInt32, usage: Float32){
         let items = getResidencies(dict: dict)
 
         let offset = items.firstIndex { (x, _) in

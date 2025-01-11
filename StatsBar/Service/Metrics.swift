@@ -12,6 +12,8 @@ import IOKit
 struct Metrics {
     let eCpuUsage: (UInt32, Float32)
     let pCpuUsage: (UInt32, Float32)
+    let eCores: [Float32]
+    let pCores: [Float32]
     let gpuUsage: (UInt32, Float32)
     let cpuPower: Float32
     let gpuPower: Float32
@@ -23,9 +25,11 @@ struct Metrics {
     let networkUsage: (upload: Int64, download: Int64)
     let diskUsage: [String: (read: Int64, write: Int64)]
 
-    init(eCpuUsage: (UInt32, Float32), pCpuUsage: (UInt32, Float32), gpuUsage: (UInt32, Float32), cpuPower: Float32, gpuPower: Float32, anePower: Float32, sysPower: Float32, memUsage: (UInt64, UInt64), swapUsage: (UInt64, UInt64), networkUsage: (Int64, Int64), diskUsage: [String: (read: Int64, write: Int64)]) {
+    init(eCpuUsage: (UInt32, Float32), pCpuUsage: (UInt32, Float32), eCores: [Float32], pCores: [Float32], gpuUsage: (UInt32, Float32), cpuPower: Float32, gpuPower: Float32, anePower: Float32, sysPower: Float32, memUsage: (UInt64, UInt64), swapUsage: (UInt64, UInt64), networkUsage: (Int64, Int64), diskUsage: [String: (read: Int64, write: Int64)]) {
         self.eCpuUsage = eCpuUsage
         self.pCpuUsage = pCpuUsage
+        self.eCores = eCores
+        self.pCores = pCores
         self.gpuUsage = gpuUsage
         self.cpuPower = cpuPower
         self.gpuPower = gpuPower

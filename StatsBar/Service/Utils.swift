@@ -9,6 +9,8 @@
 
 import IOKit
 
+public let POPUP_VIEW_HEIGHT: CGFloat = 22
+
 func getIOServices(service: String) throws -> [(name: String, next: io_object_t)] {
     var result: [(name: String, next: io_object_t)] = []
 
