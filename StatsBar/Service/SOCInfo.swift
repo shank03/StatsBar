@@ -22,6 +22,7 @@ struct SOCInfo {
     let gpuCores: Int
 
     init() throws {
+        let m3Below = try Regex("[m|M][1-3]")
         let services = try getIOServices(service: SERVICE_NAME)
 
         guard let pmgr = services.first(where: { (name, _) in
@@ -41,22 +42,6 @@ struct SOCInfo {
             throw ServiceError.dictionaryNull(for: "Power manager")
         }
 
-        let eCpuKey = "voltage-states1-sram"
-        let pCpuKey = "voltage-states5-sram"
-        let gpuKey = "voltage-states9-sram"
-
-        let eCpuFreq = try getFreq(dict: props, key: eCpuKey)
-        let pCpuFreq = try getFreq(dict: props, key: pCpuKey)
-        let gpuFreq = try getFreq(dict: props, key: gpuKey)
-
-        if eCpuFreq.isEmpty || pCpuFreq.isEmpty {
-            throw ServiceError.noCpuCores
-        }
-
-        self.eCpuFreqs = eCpuFreq
-        self.pCpuFreqs = pCpuFreq
-        self.gpuFreqs = gpuFreq
-
         let sysInfo = try runSystemProfiler()
 
         self.chipName = sysInfo.spHardwareDataType[0].chip_type
@@ -68,10 +53,27 @@ struct SOCInfo {
         self.eCores = cores[2]
         self.pCores = cores[1]
         self.gpuCores = Int(sysInfo.spDisplaysDataType[0].sppci_cores) ?? 0
+
+        let eCpuKey = "voltage-states1-sram"
+        let pCpuKey = "voltage-states5-sram"
+        let gpuKey = "voltage-states9-sram"
+
+        let isM3Below = chipName.contains(m3Below)
+        let eCpuFreq = try getFreq(dict: props, key: eCpuKey, isM3Below: isM3Below)
+        let pCpuFreq = try getFreq(dict: props, key: pCpuKey, isM3Below: isM3Below)
+        let gpuFreq = try getFreq(dict: props, key: gpuKey, isM3Below: true)
+
+        if eCpuFreq.isEmpty || pCpuFreq.isEmpty {
+            throw ServiceError.noCpuCores
+        }
+
+        self.eCpuFreqs = eCpuFreq
+        self.pCpuFreqs = pCpuFreq
+        self.gpuFreqs = gpuFreq
     }
 }
 
-private func getFreq(dict: [String: Any], key: String) throws -> [UInt32] {
+private func getFreq(dict: [String: Any], key: String, isM3Below: Bool) throws -> [UInt32] {
     guard let value = dict[key] else {
         throw ServiceError.dictionaryNull(for: key)
     }
@@ -82,6 +84,8 @@ private func getFreq(dict: [String: Any], key: String) throws -> [UInt32] {
     var bytes = [UInt8](repeating: 0, count: length)
     CFDataGetBytes(data, CFRange(location: 0, length: length), &bytes)
 
+
+    let scale: UInt32 = isM3Below ? 1000 * 1000 : 1000
     var freqs: [UInt32] = []
     //        var volts: [UInt32] = []
 
@@ -90,7 +94,7 @@ private func getFreq(dict: [String: Any], key: String) throws -> [UInt32] {
         //            volts.append(UInt32(chunk[4]) | UInt32(chunk[5]) << 8 | UInt32(chunk[6]) << 16 | UInt32(chunk[7]) << 24)
 
         let f = UInt32(chunk[0]) | UInt32(chunk[1]) << 8 | UInt32(chunk[2]) << 16 | UInt32(chunk[3]) << 24
-        freqs.append(f / 1000 / 1000)   // MHz
+        freqs.append(f / scale)   // MHz
     }
 
     bytes.removeAll()

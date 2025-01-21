@@ -39,7 +39,7 @@ struct PopupText: View {
                                 VStack {
                                     UnevenRoundedRectangle(topLeadingRadius: 2, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: 2, style: .circular)
                                         .foregroundStyle(Color.blue)
-                                        .frame(width: 5, height: POPUP_VIEW_HEIGHT * CGFloat(v), alignment: .bottom)
+                                        .frame(width: 56 / CGFloat(metric.eCores.count + metric.pCores.count), height: POPUP_VIEW_HEIGHT * CGFloat(v), alignment: .bottom)
                                 }
                                 .frame(height: POPUP_VIEW_HEIGHT, alignment: .bottom)
                             }
@@ -47,12 +47,13 @@ struct PopupText: View {
                                 VStack {
                                     UnevenRoundedRectangle(topLeadingRadius: 2, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: 2, style: .circular)
                                         .foregroundStyle(Color.green)
-                                        .frame(width: 5, height: POPUP_VIEW_HEIGHT * CGFloat(v), alignment: .bottom)
+                                        .frame(width: 56 / CGFloat(metric.eCores.count + metric.pCores.count), height: POPUP_VIEW_HEIGHT * CGFloat(v), alignment: .bottom)
                                 }
                                 .frame(height: POPUP_VIEW_HEIGHT, alignment: .bottom)
                             }
                         }
                         .padding(.horizontal, 1)
+                        .frame(maxWidth: 68)
                     }
                     .overlay(RoundedRectangle(cornerRadius: 3).stroke(lineWidth: 0.5))
 

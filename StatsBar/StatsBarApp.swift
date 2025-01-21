@@ -35,7 +35,7 @@ class AppDelegate: NSObject, ObservableObject, NSApplicationDelegate {
             if let menuButton = self.statusItem?.button {
                 menuButton.subviews.removeAll()
                 let iconView = NSHostingView(rootView: PopupText(metrics: metrics))
-                iconView.frame = NSRect(x: 0, y: 0, width: POPUP_VIEW_HEIGHT * 10 + 4, height: POPUP_VIEW_HEIGHT)
+                iconView.frame = NSRect(x: 0, y: 0, width: POPUP_VIEW_HEIGHT * 10, height: POPUP_VIEW_HEIGHT)
 
                 menuButton.addSubview(iconView)
                 menuButton.frame = iconView.frame

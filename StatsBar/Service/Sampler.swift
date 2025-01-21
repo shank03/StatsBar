@@ -43,14 +43,17 @@ struct Sampler {
             var gpuPower = Float32(0)
             var anePower = Float32(0)
 
+            var eCpuCounter = 0
+            var pCpuCounter = 0
+
             for sample in samples {
                 if sample.group == "CPU Stats" && sample.subGroup == CPU_FREQ_SUBG {
                     if sample.channel.starts(with: "ECPU") {
                         let info = self.calculateFrequencies(dict: sample.delta, freqs: self.socInfo.eCpuFreqs)
                         eCpuUsages.append(info)
 
-                        let idx = Int(sample.channel.last?.asciiValue ?? 48) - 48
-                        eCores[idx] = info.usage
+                        eCores[eCpuCounter] = info.usage
+                        eCpuCounter += 1
                         continue
                     }
 
@@ -58,8 +61,8 @@ struct Sampler {
                         let info = self.calculateFrequencies(dict: sample.delta, freqs: self.socInfo.pCpuFreqs)
                         pCpuUsages.append(info)
 
-                        let idx = Int(sample.channel.last?.asciiValue ?? 48) - 48
-                        pCores[idx] = info.usage
+                        pCores[pCpuCounter] = info.usage
+                        pCpuCounter += 1
                         continue
                     }
                 }
