@@ -1,5 +1,7 @@
 # StatsBar
 
+<img src="img/app-icon.png" />
+
 An statusbar/menubar app for system stats and info for MAC OS (Apple silicon).
 
 References
@@ -29,4 +31,4 @@ References
 
 -----
 
-I know it's not that great, doesn't even have an icon. But feel free to open issues for additions or features !
+I know it's not that great. But feel free to open issues for additions or features !
