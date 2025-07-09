@@ -215,7 +215,7 @@ struct MenuView: View {
         try await Task.sleep(for: .milliseconds(500), tolerance: .zero) // 500 ms
         let metrics = try await sampler.getMetrics()    // 500 ms
 
-        DispatchQueue.main.sync {
+        DispatchQueue.main.async { [sampler] in
             self.disks = sampler.disk.getDisks()
             self.metrics = metrics
 
