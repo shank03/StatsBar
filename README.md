@@ -23,11 +23,7 @@ References
 
 ### Installation
 
-- Git clone the project.
-- Open in xcode.
-- `Build > Archive`.
-- Select distribute app > custom > copy app.
-- Then drag the copied application to `Applications` folder.
+- Download latest from releases
 
 -----
 
